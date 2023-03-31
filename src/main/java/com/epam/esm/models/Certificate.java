@@ -2,16 +2,22 @@ package com.epam.esm.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * @author Myroslav Dudnyk
  */
 public class Certificate {
+
     private int id;
+
     private String name;
+
+    private List<Tag> tags;
     private String description;
     private BigDecimal price;
     private int duration;
@@ -23,17 +29,6 @@ public class Certificate {
     private LocalDateTime lastUpdateDate;
 
     public Certificate() {
-    }
-
-    public Certificate(final int id, final String name, final String description, final BigDecimal price,
-                       final int duration, final LocalDateTime createDate, final LocalDateTime lastUpdateDate) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.duration = duration;
-        this.createDate = createDate;
-        this.lastUpdateDate = lastUpdateDate;
     }
 
     public int getId() {
@@ -50,6 +45,14 @@ public class Certificate {
 
     public void setName(final String name) {
         this.name = name;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(final List<Tag> tags) {
+        this.tags = tags;
     }
 
     public String getDescription() {
@@ -97,12 +100,12 @@ public class Certificate {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         final Certificate that = (Certificate) o;
-        return id == that.id && duration == that.duration && name.equals(that.name) && description.equals(that.description) && price.equals(that.price) && createDate.equals(that.createDate) && lastUpdateDate.equals(that.lastUpdateDate);
+        return id == that.id && name.equals(that.name) && price.equals(that.price);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, price, duration, createDate, lastUpdateDate);
+        return Objects.hash(id, name, price);
     }
 
     @Override
@@ -110,6 +113,7 @@ public class Certificate {
         return "Certificate{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", tags=" + tags +
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", duration=" + duration +
