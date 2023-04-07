@@ -12,20 +12,17 @@ import java.util.Objects;
  * @author Myroslav Dudnyk
  */
 public class Certificate {
-
     private int id;
-
     private String name;
-
     private List<Tag> tags;
     private String description;
     private BigDecimal price;
     private int duration;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.iso8601Pattern)
     private LocalDateTime createDate;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.iso8601Pattern)
     private LocalDateTime lastUpdateDate;
 
     public Certificate() {
