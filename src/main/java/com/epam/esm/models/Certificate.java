@@ -19,10 +19,10 @@ public class Certificate {
     private BigDecimal price;
     private int duration;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.iso8601Pattern)
+            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.ISO_8601_PATTERN)
     private LocalDateTime createDate;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.iso8601Pattern)
+            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.ISO_8601_PATTERN)
     private LocalDateTime lastUpdateDate;
 
     public Certificate() {

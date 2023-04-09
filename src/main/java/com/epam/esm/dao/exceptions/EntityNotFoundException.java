@@ -1,4 +1,4 @@
-package com.epam.esm.dao;
+package com.epam.esm.dao.exceptions;
 
 /**
  * @author Myroslav Dudnyk

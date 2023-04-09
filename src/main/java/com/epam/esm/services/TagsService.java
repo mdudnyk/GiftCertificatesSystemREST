@@ -2,7 +2,7 @@ package com.epam.esm.services;
 
 import com.epam.esm.dao.TagDAO;
 import com.epam.esm.models.Tag;
-import com.epam.esm.models.TagDTO;
+import com.epam.esm.models.dtos.TagDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +22,16 @@ public class TagsService {
         return tagDAO.getAll();
     }
 
+    public List<Tag> getTagsByCertificateId(int certificateId) {
+        return tagDAO.getTagsByCertificateId(certificateId);
+    }
+
     public Tag getById(int id) {
         return tagDAO.getById(id);
+    }
+
+    public Tag getByName(String name) {
+        return tagDAO.getByName(name);
     }
 
     public Tag create(TagDTO tag) {

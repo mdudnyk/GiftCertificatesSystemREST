@@ -1,4 +1,4 @@
-package com.epam.esm.models;
+package com.epam.esm.models.dtos;
 
 import java.math.BigDecimal;
 import java.util.List;

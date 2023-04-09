@@ -1,10 +1,17 @@
-package com.epam.esm.models;
+package com.epam.esm.models.dtos;
 
 /**
  * @author Myroslav Dudnyk
  */
 public class TagDTO {
     private String name;
+
+    public TagDTO() {
+    }
+
+    public TagDTO(final String name) {
+        this.name = name;
+    }
 
     public String getName() {
         return name;

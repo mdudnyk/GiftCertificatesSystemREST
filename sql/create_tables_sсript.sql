@@ -75,3 +75,8 @@ CREATE TABLE gift_certificates_tags(
 
 INSERT INTO gift_certificate VALUES (3, 'DIVING', 'DESCRIPTION', 100.6, 10);
 INSERT INTO gift_certificate VALUES (4, 'DRIVING', 'DESCRIPTION', 11.4, 13);
+
+
+SELECT id, name FROM tag
+    INNER JOIN gift_certificates_tags gct on tag.id = gct.tag_id
+WHERE certificate_id=31;

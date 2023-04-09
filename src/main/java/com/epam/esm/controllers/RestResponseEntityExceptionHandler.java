@@ -1,6 +1,6 @@
 package com.epam.esm.controllers;
 
-import com.epam.esm.dao.EntityNotFoundException;
+import com.epam.esm.dao.exceptions.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

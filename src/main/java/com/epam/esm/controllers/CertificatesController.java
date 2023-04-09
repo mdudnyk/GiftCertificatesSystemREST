@@ -1,7 +1,7 @@
 package com.epam.esm.controllers;
 
 import com.epam.esm.models.Certificate;
-import com.epam.esm.models.CertificateDTO;
+import com.epam.esm.models.dtos.CertificateDTO;
 import com.epam.esm.services.CertificatesService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,9 @@
 package com.epam.esm.dao;
 
+import com.epam.esm.dao.exceptions.EntityNotFoundException;
+import com.epam.esm.dao.mappers.TagMapper;
 import com.epam.esm.models.Tag;
-import com.epam.esm.models.TagDTO;
+import com.epam.esm.models.dtos.TagDTO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -19,7 +21,13 @@ public class TagDAO {
 
     private static final String GET_ALL_TAGS = "SELECT * FROM tag ORDER BY id";
 
+    private static final String GET_TAGS_BY_CERTIFICATE_ID = "SELECT id, name FROM tag " +
+            "INNER JOIN gift_certificates_tags gct ON tag.id = gct.tag_id " +
+            "WHERE certificate_id=?";
+
     private static final String GET_TAG_BY_ID = "SELECT * FROM tag WHERE id=?";
+
+    private static final String GET_TAG_BY_NAME = "SELECT * FROM tag WHERE name=?";
 
     private static final String DELETE_TAG = "DELETE FROM tag WHERE id=?";
 
@@ -52,11 +60,23 @@ public class TagDAO {
                 .query(GET_ALL_TAGS, new TagMapper());
     }
 
+    public List<Tag> getTagsByCertificateId(int certificateId) {
+        return jdbcTemplate
+                .query(GET_TAGS_BY_CERTIFICATE_ID, new TagMapper(), certificateId);
+    }
+
     public Tag getById(int id) {
         return jdbcTemplate
                 .query(GET_TAG_BY_ID, new TagMapper(), id)
                 .stream().findFirst().orElseThrow(() ->
                         new EntityNotFoundException("Requested tag not found (id = " + id + ")"));
+    }
+
+    public Tag getByName(String name) {
+        return jdbcTemplate
+                .query(GET_TAG_BY_NAME, new TagMapper(), name)
+                .stream().findFirst().orElseThrow(() ->
+                        new EntityNotFoundException("Requested tag not found (name = " + name + ")"));
     }
 
     public void deleteById(int id) {

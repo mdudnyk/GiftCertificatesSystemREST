@@ -1,10 +1,7 @@
 package com.epam.esm.controllers;
 
-import com.epam.esm.dao.TagDAO;
-import com.epam.esm.models.Certificate;
-import com.epam.esm.models.CertificateDTO;
 import com.epam.esm.models.Tag;
-import com.epam.esm.models.TagDTO;
+import com.epam.esm.models.dtos.TagDTO;
 import com.epam.esm.services.TagsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;

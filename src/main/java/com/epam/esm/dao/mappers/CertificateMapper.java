@@ -1,4 +1,4 @@
-package com.epam.esm.dao;
+package com.epam.esm.dao.mappers;
 
 
 import com.epam.esm.models.Certificate;

@@ -1,7 +1,9 @@
 package com.epam.esm.dao;
 
+import com.epam.esm.dao.exceptions.EntityNotFoundException;
+import com.epam.esm.dao.mappers.CertificateMapper;
 import com.epam.esm.models.Certificate;
-import com.epam.esm.models.CertificateDTO;
+import com.epam.esm.models.dtos.CertificateDTO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
