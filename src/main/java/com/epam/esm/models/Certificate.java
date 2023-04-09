@@ -12,6 +12,8 @@ import java.util.Objects;
  * @author Myroslav Dudnyk
  */
 public class Certificate {
+    public static final String ISO_8601_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+
     private int id;
     private String name;
     private List<Tag> tags;
@@ -19,11 +21,12 @@ public class Certificate {
     private BigDecimal price;
     private int duration;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.ISO_8601_PATTERN)
+            (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime createDate;
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = DateFormat.ISO_8601_PATTERN)
+            (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime lastUpdateDate;
+
 
     public Certificate() {
     }

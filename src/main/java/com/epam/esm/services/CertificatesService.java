@@ -1,7 +1,6 @@
 package com.epam.esm.services;
 
 import com.epam.esm.dao.CertificateDAO;
-import com.epam.esm.dao.CertificateTagDAO;
 import com.epam.esm.dao.exceptions.EntityNotFoundException;
 import com.epam.esm.models.Certificate;
 import com.epam.esm.models.Tag;
@@ -60,6 +59,15 @@ public class CertificatesService {
         }
 
         return getById(newCertificateId);
+    }
+
+    @Transactional
+    public Certificate update(int certificateId, CertificateDTO certificateDTO) {
+        Certificate beforeUpdate = getById(certificateId);
+
+        System.out.println(certificateDTO);
+
+        return beforeUpdate;
     }
 
     public void deleteById(int id) {

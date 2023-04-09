@@ -3,7 +3,7 @@ package com.epam.esm.controllers;
 import com.epam.esm.models.Certificate;
 import com.epam.esm.models.dtos.CertificateDTO;
 import com.epam.esm.services.CertificatesService;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,15 +37,23 @@ public class CertificatesController {
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Certificate> create(@RequestBody CertificateDTO certificate, HttpServletRequest request) {
+    public ResponseEntity<Certificate> create(@RequestBody CertificateDTO certificate) {
         Certificate createdCertificate = certificatesService.create(certificate);
-
-        URI location = ServletUriComponentsBuilder.fromRequestUri(request)
-                .path("/{id}")
-                .buildAndExpand(createdCertificate.getId())
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(createdCertificate.getId())
                 .toUri();
 
         return ResponseEntity.created(location).body(createdCertificate);
+    }
+
+    @PatchMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<Certificate> update(@RequestBody CertificateDTO certificate, @PathVariable final int id) {
+        Certificate updatedCertificate = certificatesService.update(id, certificate);
+        String location = ServletUriComponentsBuilder.fromCurrentRequest().toUriString();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.LOCATION, location)
+                .body(updatedCertificate);
     }
 
     @DeleteMapping("/{id}")

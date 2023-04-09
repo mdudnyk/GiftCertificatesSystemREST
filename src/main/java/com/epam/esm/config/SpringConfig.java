@@ -7,7 +7,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.sql.DataSource;
@@ -17,6 +20,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableWebMvc
+@EnableTransactionManagement
 @PropertySource("classpath:db.properties")
 @ComponentScan(basePackages = "com.epam.esm")
 public class SpringConfig {
@@ -37,7 +41,7 @@ public class SpringConfig {
         if (driverClassName != null && !driverClassName.isBlank()) {
             dataSource.setDriverClassName(driverClassName);
         } else {
-            throw new NullPointerException("The database driver class name string can not be null or empty. ");
+            throw new NullPointerException("The database driver class name string can not be null or empty");
         }
 
         dataSource.setUrl(env.getProperty("spring.datasource.url"));
@@ -50,5 +54,10 @@ public class SpringConfig {
     @Bean
     public JdbcTemplate jdbcTemplate() {
         return new JdbcTemplate(dataSource());
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        return new DataSourceTransactionManager(dataSource());
     }
 }

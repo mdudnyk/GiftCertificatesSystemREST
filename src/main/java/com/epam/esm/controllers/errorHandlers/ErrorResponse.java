@@ -1,4 +1,4 @@
-package com.epam.esm.controllers;
+package com.epam.esm.controllers.errorHandlers;
 
 /**
  * @author Myroslav Dudnyk

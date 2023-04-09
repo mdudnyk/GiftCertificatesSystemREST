@@ -20,7 +20,7 @@ public class CertificatesTagsService {
         return certificateTagDAO.create(certificateId, tagId);
     }
 
-    public List<Integer> getTagsIdByCertificateId(int certificateId) {
-        return certificateTagDAO.getTagsIdByCertificateId(certificateId);
-    }
+//    public List<Integer> getTagsIdByCertificateId(int certificateId) {
+//        return certificateTagDAO.getTagsIdByCertificateId(certificateId);
+//    }
 }

@@ -11,7 +11,7 @@ public class CertificateDTO {
     private List<String> tags;
     private String description;
     private BigDecimal price;
-    private int duration;
+    private Integer duration;
 
     public String getName() {
         return name;
@@ -29,7 +29,7 @@ public class CertificateDTO {
         return price;
     }
 
-    public int getDuration() {
+    public Integer getDuration() {
         return duration;
     }
 
