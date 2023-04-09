@@ -48,14 +48,10 @@ public class CertificatesService {
     @Transactional
     public Certificate create(CertificateDTO certificate) {
         int newCertificateId = certificateDAO.create(certificate);
-        Tag tmpTag;
+
         for (String tagName : certificate.getTags()) {
-            try {
-                tmpTag = tagsService.getByName(tagName);
-            } catch (EntityNotFoundException e) {
-                tmpTag = tagsService.create(new TagDTO(tagName));
-            }
-            certificatesTagsService.create(newCertificateId, tmpTag.getId());
+            int tagId = addTagToDBIfNotPresented(tagName);
+            certificatesTagsService.create(newCertificateId, tagId);
         }
 
         return getById(newCertificateId);
@@ -63,11 +59,56 @@ public class CertificatesService {
 
     @Transactional
     public Certificate update(int certificateId, CertificateDTO certificateDTO) {
-        Certificate beforeUpdate = getById(certificateId);
+        Certificate certificateBeforeUpdate = getById(certificateId);
 
-        System.out.println(certificateDTO);
+        if (certificateDTO.getTags() != null) {
+            updateCertificateTags(certificateDTO, certificateBeforeUpdate);
+        }
 
-        return beforeUpdate;
+        certificateDAO.update(certificateId, certificateDTO);
+
+        return getById(certificateId);
+    }
+
+    private void updateCertificateTags(final CertificateDTO certificateDTO, final Certificate certificateBeforeUpdate) {
+        List<Tag> tagsListBeforeUpdate = certificateBeforeUpdate.getTags();
+        List<String> tagNamesListForUpdate = certificateDTO.getTags();
+        int certificateId = certificateBeforeUpdate.getId();
+
+        for (String tagName : tagNamesListForUpdate) {
+            boolean tagIsNotPresentedInVersionBeforeUpdate = tagsListBeforeUpdate.stream()
+                    .filter(tag -> tag.getName().equalsIgnoreCase(tagName))
+                    .findAny()
+                    .isEmpty();
+            if (tagIsNotPresentedInVersionBeforeUpdate) {
+                int tagId = addTagToDBIfNotPresented(tagName);
+                certificatesTagsService
+                        .create(certificateId, tagId);
+            }
+        }
+
+        for (Tag tag : tagsListBeforeUpdate) {
+            boolean tagIsNotPresentedInNewVersion = tagNamesListForUpdate.stream()
+                    .filter(tagName -> tagName.equalsIgnoreCase(tag.getName()))
+                    .findAny()
+                    .isEmpty();
+            if (tagIsNotPresentedInNewVersion) {
+                certificatesTagsService
+                        .deleteByCertificateIdAndTagId(certificateId, tag.getId());
+            }
+        }
+    }
+
+    private int addTagToDBIfNotPresented(final String tagName) {
+        Tag tmpTag;
+
+        try {
+            tmpTag = tagsService.getByName(tagName);
+        } catch (EntityNotFoundException e) {
+            tmpTag = tagsService.create(new TagDTO(tagName));
+        }
+
+        return tmpTag.getId();
     }
 
     public void deleteById(int id) {

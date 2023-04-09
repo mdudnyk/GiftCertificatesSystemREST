@@ -23,7 +23,7 @@ public class TagDAO {
 
     private static final String GET_TAGS_BY_CERTIFICATE_ID = "SELECT id, name FROM tag " +
             "INNER JOIN gift_certificates_tags gct ON tag.id = gct.tag_id " +
-            "WHERE certificate_id=?";
+            "WHERE certificate_id=? ORDER BY tag_id";
 
     private static final String GET_TAG_BY_ID = "SELECT * FROM tag WHERE id=?";
 

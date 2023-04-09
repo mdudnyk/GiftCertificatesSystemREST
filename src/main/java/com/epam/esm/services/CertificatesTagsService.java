@@ -3,8 +3,6 @@ package com.epam.esm.services;
 import com.epam.esm.dao.CertificateTagDAO;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * @author Myroslav Dudnyk
  */
@@ -20,7 +18,7 @@ public class CertificatesTagsService {
         return certificateTagDAO.create(certificateId, tagId);
     }
 
-//    public List<Integer> getTagsIdByCertificateId(int certificateId) {
-//        return certificateTagDAO.getTagsIdByCertificateId(certificateId);
-//    }
+    public void deleteByCertificateIdAndTagId(int certificateId, int tagId) {
+        certificateTagDAO.deleteByCertificateIdAndTagId(certificateId, tagId);
+    }
 }
