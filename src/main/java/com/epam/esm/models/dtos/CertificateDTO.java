@@ -33,6 +33,26 @@ public class CertificateDTO {
         return duration;
     }
 
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public void setTags(final List<String> tags) {
+        this.tags = tags;
+    }
+
+    public void setDescription(final String description) {
+        this.description = description;
+    }
+
+    public void setPrice(final BigDecimal price) {
+        this.price = price;
+    }
+
+    public void setDuration(final Integer duration) {
+        this.duration = duration;
+    }
+
     @Override
     public String toString() {
         return "CertificateRequestDTO{" +

@@ -19,7 +19,7 @@ public class Certificate {
     private List<Tag> tags;
     private String description;
     private BigDecimal price;
-    private int duration;
+    private Integer duration;
     @JsonFormat
             (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime createDate;
@@ -71,11 +71,11 @@ public class Certificate {
         this.price = price;
     }
 
-    public int getDuration() {
+    public Integer getDuration() {
         return duration;
     }
 
-    public void setDuration(final int duration) {
+    public void setDuration(final Integer duration) {
         this.duration = duration;
     }
 

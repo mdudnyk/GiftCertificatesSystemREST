@@ -9,6 +9,7 @@ import com.epam.esm.models.dtos.TagDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -65,9 +66,56 @@ public class CertificatesService {
             updateCertificateTags(certificateNewEntity, certificateOldEntity);
         }
 
-        certificateDAO.update(certificateId, certificateNewEntity);
+        int fieldsToUpdateCount =
+                fillNullFieldsOfNewEntityWithFieldsFromOldEntity(certificateNewEntity, certificateOldEntity);
+        if (fieldsToUpdateCount > 0) {
+            certificateDAO.update(certificateId, certificateNewEntity);
+        }
 
         return getById(certificateId);
+    }
+
+    // This method fills the 'null' fields of the certificateNewEntity object
+    // with the corresponding values from the certificateOldEntity object
+    // and returns number of updated fields.
+    private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTO certificateNewEntity,
+                                                                 final Certificate certificateOldEntity) {
+        int updatedFieldCount = 0;
+
+        String newName = certificateNewEntity.getName();
+        String oldName = certificateOldEntity.getName();
+        if (newName != null && !newName.equals(oldName)) {
+            updatedFieldCount++;
+        } else {
+            certificateNewEntity.setName(oldName);
+        }
+
+        String newDescription = certificateNewEntity.getDescription();
+        String oldDescription = certificateOldEntity.getDescription();
+        if (newDescription != null && !newDescription.equals(oldDescription)) {
+            updatedFieldCount++;
+        } else {
+            certificateNewEntity.setDescription(oldDescription);
+        }
+
+
+        BigDecimal newPrice = certificateNewEntity.getPrice();
+        BigDecimal oldPrice = certificateOldEntity.getPrice();
+        if (newPrice != null && newPrice.compareTo(oldPrice) != 0) {
+            updatedFieldCount++;
+        } else {
+            certificateNewEntity.setPrice(oldPrice);
+        }
+
+        Integer newDuration = certificateNewEntity.getDuration();
+        Integer oldDuration = certificateOldEntity.getDuration();
+        if (newDuration != null && newDuration.compareTo(oldDuration) != 0) {
+            updatedFieldCount++;
+        } else {
+            certificateNewEntity.setDuration(oldDuration);
+        }
+
+        return updatedFieldCount;
     }
 
     // Method represents business logic of handling update operation of the certificate,

@@ -10,7 +10,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,6 +23,8 @@ public class CertificateDAO {
     private static final String GET_ALL_CERTIFICATES = "SELECT * FROM gift_certificate ORDER BY id";
 
     private static final String GET_CERTIFICATE_BY_ID = "SELECT * FROM gift_certificate WHERE id=?";
+
+    private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name=?, description=?, price=?, duration=? WHERE id=?";
 
     private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id=?";
 
@@ -68,47 +69,12 @@ public class CertificateDAO {
     }
 
     public void update(int certificateId, CertificateDTO certificate) {
-        StringBuilder constructedQuery = new StringBuilder("UPDATE gift_certificate SET ");
-        List<Object> params = new ArrayList<>();
-        boolean isFirst = true;
-
-        if (certificate.getName() != null) {
-            constructedQuery.append("name=?");
-            params.add(certificate.getName());
-            isFirst = false;
-        }
-        if (certificate.getDescription() != null) {
-            if (!isFirst) {
-                constructedQuery.append(", ");
-            }
-            constructedQuery.append("description=?");
-            params.add(certificate.getDescription());
-            isFirst = false;
-        }
-        if (certificate.getPrice() != null) {
-            if (!isFirst) {
-                constructedQuery.append(", ");
-            }
-            constructedQuery.append("price=?");
-            params.add(certificate.getPrice());
-            isFirst = false;
-        }
-        if (certificate.getDuration() != null) {
-            if (!isFirst) {
-                constructedQuery.append(", ");
-            }
-            constructedQuery.append("duration=?");
-            params.add(certificate.getDuration());
-            isFirst = false;
-        }
-        if (isFirst) {
-            return;
-        }
-
-        constructedQuery.append(" WHERE id=?");
-        params.add(certificateId);
-
-        jdbcTemplate.update(constructedQuery.toString(), params.toArray());
+        jdbcTemplate.update(UPDATE_CERTIFICATE_BY_ID,
+                certificate.getName(),
+                certificate.getDescription(),
+                certificate.getPrice(),
+                certificate.getDuration(),
+                certificateId);
     }
 
 
