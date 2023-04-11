@@ -80,7 +80,7 @@ public class CertificatesService {
 
         // This block of code checks each tag name, passed in update request,
         // for representation in old certificate entity.
-        // If it doesn't, a new tag will be created in database (only if it's absent in db)
+        // If this not the case, a new tag will be created in the database (only if it doesn't exist in the database)
         // and added to the certificate entity.
         for (String tagName : tagNameListFromNewEntity) {
             if (isTagNameNotInTagNameList(tagName, tagNameListFromOldEntity)) {
@@ -90,9 +90,9 @@ public class CertificatesService {
             }
         }
 
-        // This block of code checks each tag, presented in old certificate entity,
-        // for representation in tag names list passed in the update request.
-        // If it doesn't, absent tag will be removed from the old certificate entity.
+        // This block of code checks each tag, represented in the old certificate entity,
+        // for representation in the list of tag names passed in the update request.
+        // If not, the absence tag will be removed from the old certificate entity.
         for (Tag tag : tagListFromOldEntity) {
             if (isTagNameNotInTagNameList(tag.getName(), tagNameListFromNewEntity)) {
                 certificatesTagsService
