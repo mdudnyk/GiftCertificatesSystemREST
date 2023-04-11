@@ -58,47 +58,60 @@ public class CertificatesService {
     }
 
     @Transactional
-    public Certificate update(int certificateId, CertificateDTO certificateDTO) {
-        Certificate certificateBeforeUpdate = getById(certificateId);
+    public Certificate update(int certificateId, CertificateDTO certificateNewEntity) {
+        Certificate certificateOldEntity = getById(certificateId);
 
-        if (certificateDTO.getTags() != null) {
-            updateCertificateTags(certificateDTO, certificateBeforeUpdate);
+        if (certificateNewEntity.getTags() != null) {
+            updateCertificateTags(certificateNewEntity, certificateOldEntity);
         }
 
-        certificateDAO.update(certificateId, certificateDTO);
+        certificateDAO.update(certificateId, certificateNewEntity);
 
         return getById(certificateId);
     }
 
-    private void updateCertificateTags(final CertificateDTO certificateDTO, final Certificate certificateBeforeUpdate) {
-        List<Tag> tagsListBeforeUpdate = certificateBeforeUpdate.getTags();
-        List<String> tagNamesListForUpdate = certificateDTO.getTags();
-        int certificateId = certificateBeforeUpdate.getId();
+    // Method represents business logic of handling update operation of the certificate,
+    // when some tag names were passed in the update request.
+    private void updateCertificateTags(final CertificateDTO certificateNewEntity, final Certificate certificateOldEntity) {
+        List<Tag> tagListFromOldEntity = certificateOldEntity.getTags();
+        List<String> tagNameListFromNewEntity = certificateNewEntity.getTags();
+        List<String> tagNameListFromOldEntity = tagListFromOldEntity.stream().map(Tag::getName).toList();
+        int certificateId = certificateOldEntity.getId();
 
-        for (String tagName : tagNamesListForUpdate) {
-            boolean tagIsNotPresentedInVersionBeforeUpdate = tagsListBeforeUpdate.stream()
-                    .filter(tag -> tag.getName().equalsIgnoreCase(tagName))
-                    .findAny()
-                    .isEmpty();
-            if (tagIsNotPresentedInVersionBeforeUpdate) {
+        // This block of code checks each tag name, passed in update request,
+        // for representation in old certificate entity.
+        // If it doesn't, a new tag will be created in database (only if it's absent in db)
+        // and added to the certificate entity.
+        for (String tagName : tagNameListFromNewEntity) {
+            if (isTagNameNotInTagNameList(tagName, tagNameListFromOldEntity)) {
                 int tagId = addTagToDBIfNotPresented(tagName);
                 certificatesTagsService
                         .create(certificateId, tagId);
             }
         }
 
-        for (Tag tag : tagsListBeforeUpdate) {
-            boolean tagIsNotPresentedInNewVersion = tagNamesListForUpdate.stream()
-                    .filter(tagName -> tagName.equalsIgnoreCase(tag.getName()))
-                    .findAny()
-                    .isEmpty();
-            if (tagIsNotPresentedInNewVersion) {
+        // This block of code checks each tag, presented in old certificate entity,
+        // for representation in tag names list passed in the update request.
+        // If it doesn't, absent tag will be removed from the old certificate entity.
+        for (Tag tag : tagListFromOldEntity) {
+            if (isTagNameNotInTagNameList(tag.getName(), tagNameListFromNewEntity)) {
                 certificatesTagsService
                         .deleteByCertificateIdAndTagId(certificateId, tag.getId());
             }
         }
     }
 
+    // Method checks if the tag name does not exist in the list of tag names.
+    // If so, 'true' is returned.
+    private boolean isTagNameNotInTagNameList(final String checkedTagName, final List<String> tagNameList) {
+        return tagNameList.stream().filter(tagName -> tagName.equalsIgnoreCase(checkedTagName))
+                .findAny()
+                .isEmpty();
+    }
+
+    // Method checks whether a tag with the specified name exists in the database.
+    // If so, the ID of the tag is returned.
+    // If it doesn't, new tag will be created in database and return its ID.
     private int addTagToDBIfNotPresented(final String tagName) {
         Tag tmpTag;
 
