@@ -33,24 +33,40 @@ public class CertificatesService {
     }
 
     public List<Certificate> getCertificates(String tagName, String searchText, String sortBy, String sortOrder) {
-        List<Certificate> certificates;
+        // If tag name is specified, get certificates by tag name otherwise get all certificates
+        List<Certificate> certificates = getCertificatesByTagNameOrGetAllCertificates(tagName);
 
-        // If tag name is specified, get certificates by tag name.
+        // If search text is specified, filter certificates by part of name or description
+        certificates = filterCertificatesBySearchText(certificates, searchText);
+
+        // Sort certificates by date or name with specified sort order
+        sortCertificates(certificates, sortBy, sortOrder);
+
+        // Populate tags list for every certificate from certificates list
+        populateCertificateTags(certificates);
+
+        return certificates;
+    }
+
+    private List<Certificate> getCertificatesByTagNameOrGetAllCertificates(String tagName) {
         if (tagName != null && !tagName.isEmpty()) {
-            certificates = certificateDAO.getCertificatesByTagName(tagName);
+            return certificateDAO.getCertificatesByTagName(tagName);
         } else {
-            // Otherwise, get all certificates.
-            certificates = certificateDAO.getAll();
+            return certificateDAO.getAll();
         }
+    }
 
-        // If search text is specified, filter certificates by name or description.
+    private List<Certificate> filterCertificatesBySearchText(List<Certificate> certificates, String searchText) {
         if (searchText != null && !searchText.isEmpty()) {
-            certificates = certificates.stream()
+            return certificates.stream()
                     .filter(cert -> cert.getName().contains(searchText) || cert.getDescription().contains(searchText))
                     .collect(Collectors.toList());
+        } else {
+            return certificates;
         }
+    }
 
-        // Sort certificates by date or name.
+    private void sortCertificates(List<Certificate> certificates, String sortBy, String sortOrder) {
         if (sortBy != null && !sortBy.isEmpty()) {
             if (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) {
                 if (sortBy.equalsIgnoreCase("date")) {
@@ -66,15 +82,13 @@ public class CertificatesService {
                 }
             }
         }
+    }
 
-        // Get tags list for every certificate.
+    private void populateCertificateTags(List<Certificate> certificates) {
         for (Certificate certificate : certificates) {
             certificate.setTags(tagsService.getTagsByCertificateId(certificate.getId()));
         }
-
-        return certificates;
     }
-
 
     public Certificate getById(int id) {
         Certificate certificate = certificateDAO.getById(id);
