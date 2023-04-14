@@ -9,10 +9,10 @@ import com.epam.esm.models.dtos.TagDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -97,72 +97,79 @@ public class CertificatesService {
 
     @Transactional
     public Certificate update(int certificateId, CertificateDTO certificateNewEntity) {
+        // Retrieve the old certificate entity from the database
         Certificate certificateOldEntity = getById(certificateId);
 
+        // Update the certificate tags if present in the new entity
         if (certificateNewEntity.getTags() != null) {
             updateCertificateTags(certificateNewEntity, certificateOldEntity);
         }
 
+        // Update the fields of the new entity with values from the old entity, if they are null
         int fieldsToUpdateCount =
                 fillNullFieldsOfNewEntityWithFieldsFromOldEntity(certificateNewEntity, certificateOldEntity);
+
+        // If any fields were updated, update the certificate entity in the database
         if (fieldsToUpdateCount > 0) {
             certificateDAO.update(certificateId, certificateNewEntity);
         }
 
+        // Return the updated certificate entity from the database
         return getById(certificateId);
     }
 
-    // Fills the 'null' fields of certificateNewEntity with values from certificateOldEntity
-    // and returns the number of updated fields.
-    private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTO certificateNewEntity,
-                                                                 final Certificate certificateOldEntity) {
+    // Fills null fields of certificateNewEntity with values from certificateOldEntity
+    // and returns the number of updated fields
+    private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTO certificateNew,
+                                                                 final Certificate certificateOld) {
+        // Counter to check how many fields were updated
         int updatedFieldCount = 0;
 
-        String newName = certificateNewEntity.getName();
-        String oldName = certificateOldEntity.getName();
-        if (newName != null && !newName.equals(oldName)) {
-            updatedFieldCount++;
-        } else {
-            certificateNewEntity.setName(oldName);
-        }
+        // Update the name field
+        updatedFieldCount += updateField(certificateNew::getName, certificateOld::getName, certificateNew::setName);
 
-        String newDescription = certificateNewEntity.getDescription();
-        String oldDescription = certificateOldEntity.getDescription();
-        if (newDescription != null && !newDescription.equals(oldDescription)) {
-            updatedFieldCount++;
-        } else {
-            certificateNewEntity.setDescription(oldDescription);
-        }
+        // Update the description field
+        updatedFieldCount += updateField(certificateNew::getDescription, certificateOld::getDescription, certificateNew::setDescription);
 
-        BigDecimal newPrice = certificateNewEntity.getPrice();
-        BigDecimal oldPrice = certificateOldEntity.getPrice();
-        if (newPrice != null && newPrice.compareTo(oldPrice) != 0) {
-            updatedFieldCount++;
-        } else {
-            certificateNewEntity.setPrice(oldPrice);
-        }
+        // Update the price field
+        updatedFieldCount += updateField(certificateNew::getPrice, certificateOld::getPrice, certificateNew::setPrice);
 
-        Integer newDuration = certificateNewEntity.getDuration();
-        Integer oldDuration = certificateOldEntity.getDuration();
-        if (newDuration != null && newDuration.compareTo(oldDuration) != 0) {
-            updatedFieldCount++;
-        } else {
-            certificateNewEntity.setDuration(oldDuration);
-        }
+        // Update the duration field
+        updatedFieldCount += updateField(certificateNew::getDuration, certificateOld::getDuration, certificateNew::setDuration);
 
         return updatedFieldCount;
     }
 
-    // This method updates the tags of a certificate based on the passed in CertificateDTO and existing Certificate.
+    // Helper method that updates a field of a certificate entity
+    private <T> int updateField(Supplier<T> newValueGetter, Supplier<T> oldValueGetter, Consumer<T> valueSetter) {
+        T newValue = newValueGetter.get();
+        T oldValue = oldValueGetter.get();
+
+        if (newValue != null && !newValue.equals(oldValue)) {
+            valueSetter.accept(newValue);
+            return 1;
+        } else if (newValue == null) {
+            valueSetter.accept(oldValue);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    // Updates the tags of a certificate based on the passed in CertificateDTO and existing Certificate
     private void updateCertificateTags(final CertificateDTO certificateNewEntity, final Certificate certificateOldEntity) {
         // Get the list of tags from the old certificate entity
         List<Tag> tagListFromOldEntity = certificateOldEntity.getTags();
+
         // Get the list of tag names from the new certificate DTO
         List<String> tagNameListFromNewEntity = certificateNewEntity.getTags();
+
         // Get the list of tag names from the old certificate entity
         List<String> tagNameListFromOldEntity = tagListFromOldEntity.stream().map(Tag::getName).toList();
+
         // Get the ID of the certificate being updated
         int certificateId = certificateOldEntity.getId();
+
 
         // Iterate over each tag name in the list of tag names from the new certificate entity
         for (String tagName : tagNameListFromNewEntity) {
