@@ -24,6 +24,11 @@ public class CertificateDAO {
 
     private static final String GET_CERTIFICATE_BY_ID = "SELECT * FROM gift_certificate WHERE id=?";
 
+    private static final String GET_CERTIFICATE_BY_TAG_NAME = "SELECT gc.* FROM gift_certificate gc " +
+            "JOIN gift_certificates_tags gct ON gc.id = gct.certificate_id " +
+            "JOIN tag t ON gct.tag_id = t.id " +
+            "WHERE t.name=?";
+
     private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name=?, description=?, price=?, duration=? WHERE id=?";
 
     private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id=?";
@@ -57,8 +62,26 @@ public class CertificateDAO {
     }
 
     public List<Certificate> getAll() {
-        return jdbcTemplate
+        List<Certificate> certificates = jdbcTemplate
                 .query(GET_ALL_CERTIFICATES, new CertificateMapper());
+
+        if (certificates.isEmpty()) {
+            throw new EntityNotFoundException("There are no certificates yet.");
+        }
+
+        return certificates;
+
+    }
+
+    public List<Certificate> getCertificatesByTagName(String tagName) {
+        List<Certificate> certificates = jdbcTemplate
+                .query(GET_CERTIFICATE_BY_TAG_NAME, new CertificateMapper(), tagName);
+
+        if (certificates.isEmpty()) {
+            throw new EntityNotFoundException("No certificates with the tag name = '" + tagName + "'.");
+        }
+
+        return certificates;
     }
 
     public Certificate getById(int id) {

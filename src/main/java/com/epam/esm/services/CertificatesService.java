@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Myroslav Dudnyk
@@ -29,15 +32,49 @@ public class CertificatesService {
         this.certificatesTagsService = certificatesTagsService;
     }
 
-    public List<Certificate> getAll() {
-        List<Certificate> certificates = certificateDAO.getAll();
+    public List<Certificate> getCertificates(String tagName, String searchText, String sortBy, String sortOrder) {
+        List<Certificate> certificates;
 
+        // If tag name is specified, get certificates by tag name.
+        if (tagName != null && !tagName.isEmpty()) {
+            certificates = certificateDAO.getCertificatesByTagName(tagName);
+        } else {
+            // Otherwise, get all certificates.
+            certificates = certificateDAO.getAll();
+        }
+
+        // If search text is specified, filter certificates by name or description.
+        if (searchText != null && !searchText.isEmpty()) {
+            certificates = certificates.stream()
+                    .filter(cert -> cert.getName().contains(searchText) || cert.getDescription().contains(searchText))
+                    .collect(Collectors.toList());
+        }
+
+        // Sort certificates by date or name.
+        if (sortBy != null && !sortBy.isEmpty()) {
+            if (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) {
+                if (sortBy.equalsIgnoreCase("date")) {
+                    certificates.sort(Comparator.comparing(Certificate::getCreateDate).reversed());
+                } else if (sortBy.equalsIgnoreCase("name")) {
+                    certificates.sort(Comparator.comparing(Certificate::getName).reversed());
+                }
+            } else {
+                if (sortBy.equalsIgnoreCase("date")) {
+                    certificates.sort(Comparator.comparing(Certificate::getCreateDate));
+                } else if (sortBy.equalsIgnoreCase("name")) {
+                    certificates.sort(Comparator.comparing(Certificate::getName));
+                }
+            }
+        }
+
+        // Get tags list for every certificate.
         for (Certificate certificate : certificates) {
             certificate.setTags(tagsService.getTagsByCertificateId(certificate.getId()));
         }
 
         return certificates;
     }
+
 
     public Certificate getById(int id) {
         Certificate certificate = certificateDAO.getById(id);
@@ -75,9 +112,8 @@ public class CertificatesService {
         return getById(certificateId);
     }
 
-    // This method fills the 'null' fields of the certificateNewEntity object
-    // with the corresponding values from the certificateOldEntity object
-    // and returns number of updated fields.
+    // Fills the 'null' fields of certificateNewEntity with values from certificateOldEntity
+    // and returns the number of updated fields.
     private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTO certificateNewEntity,
                                                                  final Certificate certificateOldEntity) {
         int updatedFieldCount = 0;
@@ -98,7 +134,6 @@ public class CertificatesService {
             certificateNewEntity.setDescription(oldDescription);
         }
 
-
         BigDecimal newPrice = certificateNewEntity.getPrice();
         BigDecimal oldPrice = certificateOldEntity.getPrice();
         if (newPrice != null && newPrice.compareTo(oldPrice) != 0) {
@@ -118,31 +153,33 @@ public class CertificatesService {
         return updatedFieldCount;
     }
 
-    // Method represents business logic of handling update operation of the certificate,
-    // when some tag names were passed in the update request.
+    // This method updates the tags of a certificate based on the passed in CertificateDTO and existing Certificate.
     private void updateCertificateTags(final CertificateDTO certificateNewEntity, final Certificate certificateOldEntity) {
+        // Get the list of tags from the old certificate entity
         List<Tag> tagListFromOldEntity = certificateOldEntity.getTags();
+        // Get the list of tag names from the new certificate DTO
         List<String> tagNameListFromNewEntity = certificateNewEntity.getTags();
+        // Get the list of tag names from the old certificate entity
         List<String> tagNameListFromOldEntity = tagListFromOldEntity.stream().map(Tag::getName).toList();
+        // Get the ID of the certificate being updated
         int certificateId = certificateOldEntity.getId();
 
-        // This block of code checks each tag name, passed in update request,
-        // for representation in old certificate entity.
-        // If this not the case, a new tag will be created in the database (only if it doesn't exist in the database)
-        // and added to the certificate entity.
+        // Iterate over each tag name in the list of tag names from the new certificate entity
         for (String tagName : tagNameListFromNewEntity) {
+            // If the tag name is not in the list of tag names from the old certificate entity
             if (isTagNameNotInTagNameList(tagName, tagNameListFromOldEntity)) {
+                // Add the new tag to the database (only if it doesn't exist in the database) and return its ID
                 int tagId = addTagToDBIfNotPresented(tagName);
-                certificatesTagsService
-                        .create(certificateId, tagId);
+                // Add the tag to the certificate entity
+                certificatesTagsService.create(certificateId, tagId);
             }
         }
 
-        // This block of code checks each tag, represented in the old certificate entity,
-        // for representation in the list of tag names passed in the update request.
-        // If not, the absence tag will be removed from the old certificate entity.
+        // Iterate over each tag in the list of tags from the old certificate entity
         for (Tag tag : tagListFromOldEntity) {
+            // If the tag is not in the list of tag names from the new certificate entity
             if (isTagNameNotInTagNameList(tag.getName(), tagNameListFromNewEntity)) {
+                // Remove the tag from the certificate entity
                 certificatesTagsService
                         .deleteByCertificateIdAndTagId(certificateId, tag.getId());
             }

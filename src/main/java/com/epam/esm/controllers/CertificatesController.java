@@ -25,15 +25,26 @@ public class CertificatesController {
         this.certificatesService = certificatesService;
     }
 
-    @GetMapping()
-    public List<Certificate> getAll() {
-        return certificatesService.getAll();
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Certificate> getById(@PathVariable("id") int id) {
         Certificate certificate = certificatesService.getById(id);
         return ResponseEntity.ok(certificate);
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<Certificate>> getCertificates(
+            @RequestParam(value = "tagName", required = false) String tagName,
+            @RequestParam(value = "searchText", required = false) String searchText,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortOrder", required = false) String sortOrder) {
+        List<Certificate> certificates =
+                certificatesService.getCertificates(tagName, searchText, sortBy, sortOrder);
+
+        if (certificates.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(certificates, HttpStatus.OK);
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
