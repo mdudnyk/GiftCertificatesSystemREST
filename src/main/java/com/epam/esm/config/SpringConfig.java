@@ -41,6 +41,7 @@ public class SpringConfig {
         if (driverClassName != null && !driverClassName.isBlank()) {
             dataSource.setDriverClassName(driverClassName);
         } else {
+            //NPE?
             throw new NullPointerException("The database driver class name string can not be null or empty");
         }
 

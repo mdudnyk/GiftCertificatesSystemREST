@@ -8,12 +8,15 @@ import com.epam.esm.models.dtos.CertificateDTO;
 import com.epam.esm.models.dtos.TagDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static jdk.nashorn.internal.objects.NativeArray.sort;
 
 /**
  * @author Myroslav Dudnyk
@@ -24,6 +27,8 @@ public class CertificatesService {
     private final TagsService tagsService;
     private final CertificatesTagsService certificatesTagsService;
 
+
+    //Maybe lombok annotation
     public CertificatesService(final CertificateDAO certificateDAO,
                                final TagsService tagsService,
                                final CertificatesTagsService certificatesTagsService) {
@@ -35,6 +40,8 @@ public class CertificatesService {
     public List<Certificate> getCertificates(String tagName, String searchText, String sortBy, String sortOrder) {
         // If tag name is specified, get certificates by tag name otherwise get all certificates
         List<Certificate> certificates = getCertificatesByTagNameOrGetAllCertificates(tagName);
+
+        //Comments are not needed
 
         // If search text is specified, filter certificates by part of name or description
         certificates = filterCertificatesBySearchText(certificates, searchText);
@@ -49,6 +56,7 @@ public class CertificatesService {
     }
 
     private List<Certificate> getCertificatesByTagNameOrGetAllCertificates(String tagName) {
+        //Duplication of tagName != null && !tagName.isEmpty(), there are method in StringUtils for this operation
         if (tagName != null && !tagName.isEmpty()) {
             return certificateDAO.getCertificatesByTagName(tagName);
         } else {
@@ -66,23 +74,52 @@ public class CertificatesService {
         }
     }
 
+//    private void sortCertificates(List<Certificate> certificates, String sortBy, String sortOrder) {
+//        if (sortBy != null && !sortBy.isEmpty()) {
+//            //very difficult logic, a lot of if-else constructions can be simplified
+//            if (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) {
+//                if (sortBy.equalsIgnoreCase("date")) {
+//                    certificates.sort(Comparator.comparing(Certificate::getCreateDate).reversed());
+//                } else if (sortBy.equalsIgnoreCase("name")) {
+//                    certificates.sort(Comparator.comparing(Certificate::getName).reversed());
+//                }
+//            } else {
+//                if (sortBy.equalsIgnoreCase("date")) {
+//                    certificates.sort(Comparator.comparing(Certificate::getCreateDate));
+//                } else if (sortBy.equalsIgnoreCase("name")) {
+//                    certificates.sort(Comparator.comparing(Certificate::getName));
+//                }
+//            }
+//        }
+//    }
+
     private void sortCertificates(List<Certificate> certificates, String sortBy, String sortOrder) {
-        if (sortBy != null && !sortBy.isEmpty()) {
-            if (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) {
-                if (sortBy.equalsIgnoreCase("date")) {
-                    certificates.sort(Comparator.comparing(Certificate::getCreateDate).reversed());
-                } else if (sortBy.equalsIgnoreCase("name")) {
-                    certificates.sort(Comparator.comparing(Certificate::getName).reversed());
-                }
-            } else {
-                if (sortBy.equalsIgnoreCase("date")) {
-                    certificates.sort(Comparator.comparing(Certificate::getCreateDate));
-                } else if (sortBy.equalsIgnoreCase("name")) {
-                    certificates.sort(Comparator.comparing(Certificate::getName));
-                }
+        //make sorting order and sorting type ENUMs
+        switch (sortOrder) {
+            case "desc": sort(certificates, sortBy);
+            case "asc": {
+                sort(certificates, sortBy);
             }
         }
     }
+
+    private void sort(List<Certificate> certificates, String sortBy) {
+        extracted(sortBy, certificates,
+                Comparator.comparing(Certificate::getName),
+                Comparator.comparing(Certificate::getCreateDate));
+    }
+
+    private static void extracted(String sortBy, List<Certificate> certificates, Comparator<Certificate> comparing, Comparator<Certificate> comparing1) {
+        switch (sortBy) {
+            case "name": {
+                certificates.sort(comparing);
+            }
+            case "date": {
+                certificates.sort(comparing1);
+            }
+        }
+    }
+
 
     private void populateCertificateTags(List<Certificate> certificates) {
         for (Certificate certificate : certificates) {

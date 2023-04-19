@@ -13,11 +13,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 /**
  * @author Myroslav Dudnyk
  */
+
+//Constants is better to static import
 @RestController
-@RequestMapping(value = "/certificates", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/certificates", produces = APPLICATION_JSON_VALUE)
 public class CertificatesController {
     private final CertificatesService certificatesService;
 
@@ -47,7 +51,8 @@ public class CertificatesController {
         return new ResponseEntity<>(certificates, HttpStatus.OK);
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    //duplication of 'application/json'
+    @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<Certificate> create(@RequestBody CertificateDTO certificate) {
         Certificate createdCertificate = certificatesService.create(certificate);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()

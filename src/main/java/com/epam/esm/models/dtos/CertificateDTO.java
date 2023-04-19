@@ -1,5 +1,7 @@
 package com.epam.esm.models.dtos;
 
+import org.springframework.lang.NonNull;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -7,6 +9,7 @@ import java.util.List;
  * @author Myroslav Dudnyk
  */
 public class CertificateDTO {
+
     private String name;
     private List<String> tags;
     private String description;
