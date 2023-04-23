@@ -105,10 +105,8 @@ public class CertificatesServiceImpl implements CertificatesService {
                     : SortOrder.ASC;
 
             switch (sortOrderEnum) {
-                case ASC:
-                    certificates.sort(sortByEnum.comparator);
-                case DESC:
-                    certificates.sort(sortByEnum.comparator.reversed());
+                case ASC -> certificates.sort(sortByEnum.comparator);
+                case DESC -> certificates.sort(sortByEnum.comparator.reversed());
             }
 
         } catch (IllegalArgumentException e) {
