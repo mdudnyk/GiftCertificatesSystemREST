@@ -10,7 +10,7 @@ import java.sql.SQLException;
 /**
  * @author Myroslav Dudnyk
  */
-public class CertificateMapper implements RowMapper<Certificate> {
+public class CertificateDAOMapper implements RowMapper<Certificate> {
     @Override
     public Certificate mapRow(final ResultSet rs, final int rowNum) throws SQLException {
         Certificate certificate = new Certificate();

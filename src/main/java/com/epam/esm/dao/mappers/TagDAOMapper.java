@@ -9,7 +9,7 @@ import java.sql.SQLException;
 /**
  * @author Myroslav Dudnyk
  */
-public class TagMapper implements RowMapper<Tag> {
+public class TagDAOMapper implements RowMapper<Tag> {
     @Override
     public Tag mapRow(final ResultSet rs, final int rowNum) throws SQLException {
         Tag tag = new Tag();

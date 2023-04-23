@@ -1,6 +1,7 @@
 package com.epam.esm.controllers.errorHandlers;
 
-import com.epam.esm.dao.exceptions.EntityNotFoundException;
+import com.epam.esm.services.exceptions.EntityNotFoundException;
+import com.epam.esm.services.exceptions.UnsupportedSortingParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,8 +19,14 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException e) {
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), 40401);
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), e.getErrorCode());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UnsupportedSortingParameter.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedSortingParameterException(UnsupportedSortingParameter e) {
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), e.getErrorCode());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler()

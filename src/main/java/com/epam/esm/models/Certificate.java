@@ -3,32 +3,44 @@ package com.epam.esm.models;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
 /**
  * @author Myroslav Dudnyk
  */
-public class Certificate {
+public class Certificate implements Serializable {
     public static final String ISO_8601_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
     private int id;
+
     private String name;
-    private List<Tag> tags;
+
     private String description;
+
     private BigDecimal price;
+
     private Integer duration;
+
     @JsonFormat
             (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime createDate;
+
     @JsonFormat
             (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime lastUpdateDate;
 
 
     public Certificate() {
+    }
+
+    public Certificate(String name, String description, BigDecimal price, Integer duration) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.duration = duration;
     }
 
     public int getId() {
@@ -45,14 +57,6 @@ public class Certificate {
 
     public void setName(final String name) {
         this.name = name;
-    }
-
-    public List<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(final List<Tag> tags) {
-        this.tags = tags;
     }
 
     public String getDescription() {
@@ -113,7 +117,6 @@ public class Certificate {
         return "Certificate{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", tags=" + tags +
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", duration=" + duration +

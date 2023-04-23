@@ -1,9 +1,8 @@
 package com.epam.esm.dao;
 
-import com.epam.esm.dao.exceptions.EntityNotFoundException;
-import com.epam.esm.dao.mappers.CertificateMapper;
+import com.epam.esm.dao.mappers.CertificateDAOMapper;
 import com.epam.esm.models.Certificate;
-import com.epam.esm.models.dtos.CertificateDTO;
+import com.epam.esm.services.exceptions.EntityNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -11,27 +10,29 @@ import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Myroslav Dudnyk
  */
 @Component
 public class CertificateDAO {
-    private static final String CREATE_CERTIFICATE =
-            "INSERT INTO gift_certificate (name, description, price, duration) VALUES (?, ?, ?, ?)";
+    private static final String GET_CERTIFICATE_BY_ID = "SELECT * FROM gift_certificate WHERE id = ?";
 
-    private static final String GET_ALL_CERTIFICATES = "SELECT * FROM gift_certificate ORDER BY id";
+    private static final String GET_ALL_CERTIFICATES = "SELECT * FROM gift_certificate";
 
-    private static final String GET_CERTIFICATE_BY_ID = "SELECT * FROM gift_certificate WHERE id=?";
-
-    private static final String GET_CERTIFICATE_BY_TAG_NAME = "SELECT gc.* FROM gift_certificate gc " +
+    private static final String GET_CERTIFICATES_BY_TAG_NAME = "SELECT gc.* FROM gift_certificate gc " +
             "JOIN gift_certificates_tags gct ON gc.id = gct.certificate_id " +
             "JOIN tag t ON gct.tag_id = t.id " +
             "WHERE t.name=?";
 
-    private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name=?, description=?, price=?, duration=? WHERE id=?";
+    private static final String CREATE_CERTIFICATE =
+            "INSERT INTO gift_certificate (name, description, price, duration) VALUES (?, ?, ?, ?)";
 
-    private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id=?";
+//    private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name=?, description=?, " +
+//            "price=?, duration=? WHERE id=?";
+
+//    private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id=?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -39,7 +40,26 @@ public class CertificateDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public int create(CertificateDTO certificate) {
+
+    public Optional<Certificate> getById(int id) {
+        return jdbcTemplate.query(GET_CERTIFICATE_BY_ID, new CertificateDAOMapper(), id)
+                .stream()
+                .findFirst();
+    }
+
+    public Optional<List<Certificate>> getAll() {
+        List<Certificate> resultList = jdbcTemplate
+                .query(GET_ALL_CERTIFICATES, new CertificateDAOMapper());
+        return resultList.size() > 0 ? Optional.of(resultList) : Optional.empty();
+    }
+
+    public Optional<List<Certificate>> getCertificatesByTagName(String tagName) {
+        List<Certificate> resultList = jdbcTemplate
+                .query(GET_CERTIFICATES_BY_TAG_NAME, new CertificateDAOMapper(), tagName);
+        return resultList.size() > 0 ? Optional.of(resultList) : Optional.empty();
+    }
+
+    public Optional<Number> create(Certificate certificate) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -51,60 +71,22 @@ public class CertificateDAO {
             return ps;
         }, keyHolder);
 
-        Number generatedId = keyHolder.getKey();
-
-        if (generatedId == null) {
-            throw new NullPointerException("Generated key 'id' for certificate with name='"
-                    + certificate.getName() + "' equals null");
-        }
-
-        return generatedId.intValue();
+        return Optional.ofNullable(keyHolder.getKey());
     }
 
-    public List<Certificate> getAll() {
-        List<Certificate> certificates = jdbcTemplate
-                .query(GET_ALL_CERTIFICATES, new CertificateMapper());
+//    public void update(int certificateId, Certificate certificate) {
+//        jdbcTemplate.update(UPDATE_CERTIFICATE_BY_ID,
+//                certificate.getName(),
+//                certificate.getDescription(),
+//                certificate.getPrice(),
+//                certificate.getDuration(),
+//                certificateId);
+//    }
 
-        if (certificates.isEmpty()) {
-            throw new EntityNotFoundException("There are no certificates yet.");
-        }
-
-        return certificates;
-
-    }
-
-    public List<Certificate> getCertificatesByTagName(String tagName) {
-        List<Certificate> certificates = jdbcTemplate
-                .query(GET_CERTIFICATE_BY_TAG_NAME, new CertificateMapper(), tagName);
-
-        if (certificates.isEmpty()) {
-            throw new EntityNotFoundException("No certificates with the tag name = '" + tagName + "'.");
-        }
-
-        return certificates;
-    }
-
-    public Certificate getById(int id) {
-        return jdbcTemplate
-                .query(GET_CERTIFICATE_BY_ID, new CertificateMapper(), id)
-                .stream().findFirst().orElseThrow(() ->
-                        new EntityNotFoundException("Requested certificate not found (id = " + id + ")"));
-    }
-
-    public void update(int certificateId, CertificateDTO certificate) {
-        jdbcTemplate.update(UPDATE_CERTIFICATE_BY_ID,
-                certificate.getName(),
-                certificate.getDescription(),
-                certificate.getPrice(),
-                certificate.getDuration(),
-                certificateId);
-    }
-
-
-    public void deleteById(int id) {
-        int deletedRows = jdbcTemplate.update(DELETE_CERTIFICATE, id);
-        if (deletedRows == 0) {
-            throw new EntityNotFoundException("Unable to delete certificate with id=" + id + ". It was not found");
-        }
-    }
+//    public void deleteById(int id) {
+//        int deletedRows = jdbcTemplate.update(DELETE_CERTIFICATE, id);
+//        if (deletedRows == 0) {
+//            throw new EntityNotFoundException("Unable to delete certificate with id=" + id + ". It was not found");
+//        }
+//    }
 }

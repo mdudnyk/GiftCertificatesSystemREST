@@ -1,12 +1,14 @@
 package com.epam.esm.models;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * @author Myroslav Dudnyk
  */
-public class Tag {
+public class Tag implements Serializable {
     private int id;
+
     private String name;
 
     public Tag() {
@@ -14,6 +16,10 @@ public class Tag {
 
     public Tag(final int id, final String name) {
         this.id = id;
+        this.name = name;
+    }
+
+    public Tag(final String name) {
         this.name = name;
     }
 
