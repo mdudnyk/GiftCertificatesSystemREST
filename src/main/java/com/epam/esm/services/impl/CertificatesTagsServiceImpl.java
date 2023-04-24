@@ -16,11 +16,11 @@ public class CertificatesTagsServiceImpl implements CertificatesTagsService {
     }
 
     @Override
-    public int create(int certificateId, int tagId) {
-        return certificateTagDAO.create(certificateId, tagId);
+    public void attachTagToCertificate(int tagId, int certificateId) {
+        certificateTagDAO.create(certificateId, tagId);
     }
 
-//    public void deleteByCertificateIdAndTagId(int certificateId, int tagId) {
-//        certificateTagDAO.deleteByCertificateIdAndTagId(certificateId, tagId);
-//    }
+    public void deleteTagFromCertificate(int tagId, int certificateId) {
+        certificateTagDAO.deleteByCertificateIdAndTagId(certificateId, tagId);
+    }
 }

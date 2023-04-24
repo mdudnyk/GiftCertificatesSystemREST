@@ -30,8 +30,6 @@ public class CertificateDAO {
     private static final String CREATE_CERTIFICATE =
             "INSERT INTO gift_certificate (name, description, price, duration) VALUES (?, ?, ?, ?)";
 
-    private static final String CHECK_CERTIFICATE_NAME_EXISTENCE = "SELECT COUNT(*) FROM gift_certificate WHERE name = ?";
-
     private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name = ?, description = ?, " +
             "price = ?, duration = ? WHERE id = ?";
 
@@ -85,12 +83,6 @@ public class CertificateDAO {
         }, keyHolder);
 
         return Optional.ofNullable(keyHolder.getKey());
-    }
-
-    public boolean checkIfCertificateNameAlreadyExists(String name) {
-        return jdbcTemplate
-                .query(CHECK_CERTIFICATE_NAME_EXISTENCE, new CertificateDAOMapper(), name)
-                .size() > 0;
     }
 
     public int update(int certificateId, Certificate certificate) {

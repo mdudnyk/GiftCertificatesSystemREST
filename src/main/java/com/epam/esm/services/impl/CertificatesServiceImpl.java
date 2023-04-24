@@ -2,6 +2,7 @@ package com.epam.esm.services.impl;
 
 import com.epam.esm.dao.CertificateDAO;
 import com.epam.esm.models.Certificate;
+import com.epam.esm.models.Tag;
 import com.epam.esm.models.dtos.tag.TagDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -118,12 +120,12 @@ public class CertificatesServiceImpl implements CertificatesService {
                 .orElseThrow(() ->
                         new ServiceException("Unable to get an ID of created certificate", 40023)
                 );
-        certificateDTOReq.tags().forEach(tagName -> addTagToCertificateEntity(newCertificateId, tagName));
+        certificateDTOReq.tags().forEach(tagName -> attachTagToCertificate(tagName, newCertificateId));
 
         return getById(newCertificateId);
     }
 
-    private void addTagToCertificateEntity(int certificateId, String tagName) {
+    private void attachTagToCertificate(String tagName, int certificateId) {
         int tagId;
 
         try {
@@ -132,32 +134,43 @@ public class CertificatesServiceImpl implements CertificatesService {
             tagId = tagsService.create(new TagDTOReq(tagName)).id();
         }
 
-        certificatesTagsService.create(certificateId, tagId);
+        certificatesTagsService.attachTagToCertificate(certificateId, tagId);
     }
 
     @Transactional
-    public CertificateDTOResp update(int certificateId, CertificateDTOReq certificateDTOReq) {
-//        // Retrieve the old certificate entity from the database
-//        Certificate certificateOldEntity = getById(certificateId);
-//
-//        // Update the certificate tags if present in the new entity
-//        if (certificateNewEntity.tags() != null) {
-//            updateCertificateTags(certificateNewEntity, certificateOldEntity);
-//        }
-//
-//        // Update the fields of the new entity with values from the old entity, if they are null
-//        int fieldsToUpdateCount =
-//                fillNullFieldsOfNewEntityWithFieldsFromOldEntity(certificateNewEntity, certificateOldEntity);
-//
-//        // If any fields were updated, update the certificate entity in the database
-//        if (fieldsToUpdateCount > 0) {
-//            certificateDAO.update(certificateId, certificateNewEntity);
-//        }
-//
-//        // Return the updated certificate entity from the database
-        return getById(certificateId);
+    public CertificateDTOResp update(int certId, CertificateDTOReq certDTOReq) {
+        CertificateDTOResp certOldEntity = getById(certId);
+
+        if (certDTOReq.tags() != null) {
+            updateCertificateTags(certId, certOldEntity.tags(), certDTOReq.tags());
+        }
+
+        return getById(certId);
     }
-//
+
+    private void updateCertificateTags(int certId, List<String> oldTagNamesList, List<String> newTagNamesList) {
+        // Remove any tags from the old entity that are not in the new entity
+        List<String> tagNamesToRemove = getTagsToRemove(oldTagNamesList, newTagNamesList);
+        tagNamesToRemove.forEach(tagName -> certificatesTagsService
+                .deleteTagFromCertificate(tagsService.getTagIdByName(tagName), certId));
+
+        // Add all tags from the new entity that are not in the old entity
+        List<String> tagNamesToAttach = getTagsToAttach(oldTagNamesList, newTagNamesList);
+        tagNamesToAttach.forEach(tagName -> attachTagToCertificate(tagName, certId));
+    }
+
+    private List<String> getTagsToRemove(List<String> oldTagNamesList, List<String> newTagNamesList) {
+        return oldTagNamesList.stream()
+                .filter(oldTagName -> !newTagNamesList.contains(oldTagName))
+                .toList();
+    }
+
+    private List<String> getTagsToAttach(List<String> oldTagNamesList, List<String> newTagNamesList) {
+        return newTagNamesList.stream()
+                .filter(newTagName -> !oldTagNamesList.contains(newTagName))
+                .toList();
+    }
+
 //    // Fills null fields of certificateNewEntity with values from certificateOldEntity
 //    // and returns the number of updated fields
 //    private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTOReq certificateNew, final Certificate certificateOld) {
@@ -179,51 +192,6 @@ public class CertificatesServiceImpl implements CertificatesService {
 //
 //        return 0;
 //    }
-//
-//    // Updates the tags of a certificate based on the passed in CertificateDTO and existing Certificate
-//    private void updateCertificateTags(final CertificateDTOReq certificateNewEntity, final Certificate certificateOldEntity) {
-//        // Get the list of tags from the old certificate entity
-//        List<Tag> tagListFromOldEntity = certificateOldEntity.getTags();
-//
-//        // Get the list of tag names from the new certificate DTO
-//        List<String> tagNameListFromNewEntity = certificateNewEntity.tags();
-//
-//        // Get the list of tag names from the old certificate entity
-//        List<String> tagNameListFromOldEntity = tagListFromOldEntity.stream().map(Tag::getName).toList();
-//
-//        // Get the ID of the certificate being updated
-//        int certificateId = certificateOldEntity.getId();
-//
-//
-//        // Iterate over each tag name in the list of tag names from the new certificate entity
-//        for (String tagName : tagNameListFromNewEntity) {
-//            // If the tag name is not in the list of tag names from the old certificate entity
-//            if (isTagNameNotInTagNameList(tagName, tagNameListFromOldEntity)) {
-//                // Add the new tag to the database (only if it doesn't exist in the database) and return its ID
-//                int tagId = addTagToDBIfNotPresented(tagName);
-//                // Add the tag to the certificate entity
-//                certificatesTagsService.create(certificateId, tagId);
-//            }
-//        }
-//
-//        // Iterate over each tag in the list of tags from the old certificate entity
-//        for (Tag tag : tagListFromOldEntity) {
-//            // If the tag is not in the list of tag names from the new certificate entity
-//            if (isTagNameNotInTagNameList(tag.getName(), tagNameListFromNewEntity)) {
-//                // Remove the tag from the certificate entity
-//                certificatesTagsService
-//                        .deleteByCertificateIdAndTagId(certificateId, tag.getId());
-//            }
-//        }
-//    }
-//
-//    // Method checks if the tag name does not exist in the list of tag names. If so, 'true' is returned.
-//    private boolean isTagNameNotInTagNameList(final String checkedTagName, final List<String> tagNameList) {
-//        return tagNameList.stream().filter(tagName -> tagName.equalsIgnoreCase(checkedTagName))
-//                .findAny()
-//                .isEmpty();
-//    }
-
 
     public void deleteById(int id) {
         int deletedRows = certificateDAO.deleteById(id);

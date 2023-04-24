@@ -4,5 +4,7 @@ package com.epam.esm.services;
  * @author Myroslav Dudnyk
  */
 public interface CertificatesTagsService {
-    int create(int certificateId, int tagId);
+    void attachTagToCertificate(int tagId, int certificateId);
+
+    void deleteTagFromCertificate(int tagId, int certificateId);
 }
