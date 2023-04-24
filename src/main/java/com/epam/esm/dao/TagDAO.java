@@ -28,7 +28,7 @@ public class TagDAO {
 
     private static final String GET_TAG_ID_BY_NAME = "SELECT id FROM tag WHERE name = ?";
 
-    private static final String CHECK_TAG_NAME_EXISTENCE = "SELECT COUNT(*) FROM tag WHERE name = ?";
+    private static final String COUNT_TAGS_WITH_SPECIFIED_NAME = "SELECT COUNT(*) FROM tag WHERE name = ?";
 
     private static final String DELETE_TAG = "DELETE FROM tag WHERE id = ?";
 
@@ -50,6 +50,13 @@ public class TagDAO {
                 .findFirst();
     }
 
+    public boolean checkIfTagWithNameExists(String name) {
+        Integer count = jdbcTemplate
+                .queryForObject(COUNT_TAGS_WITH_SPECIFIED_NAME, Integer.class, name);
+
+        return count != null && count > 0;
+    }
+
     public Optional<List<Tag>> getAll() {
         List<Tag> tagsList = jdbcTemplate.query(GET_ALL_TAGS, new TagDAOMapper());
 
@@ -59,12 +66,6 @@ public class TagDAO {
     public List<Tag> getTagsByCertificateId(int certificateId) {
         return jdbcTemplate
                 .query(GET_TAGS_BY_CERTIFICATE_ID, new TagDAOMapper(), certificateId);
-    }
-
-    public boolean checkIfTagNameAlreadyExists(String name) {
-        return jdbcTemplate
-                .query(CHECK_TAG_NAME_EXISTENCE, new TagDAOMapper(), name)
-                .size() > 0;
     }
 
     public Optional<Number> create(Tag tag) {

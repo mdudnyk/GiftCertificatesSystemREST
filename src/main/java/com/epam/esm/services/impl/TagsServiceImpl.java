@@ -65,14 +65,13 @@ public class TagsServiceImpl implements TagsService {
 
     @Override
     public TagDTOResp create(TagDTOReq tagDTOReq) {
-        if (tagDAO.checkIfTagNameAlreadyExists(tagDTOReq.name())) {
+        if (tagDAO.checkIfTagWithNameExists(tagDTOReq.name())) {
             throw new EntityAlreadyExistsException(ENTITY_NAME, tagDTOReq.name());
         }
 
         int newTagId = (int) tagDAO.create(tagMapper.toEntity(tagDTOReq))
                 .orElseThrow(() ->
-                        new ServiceException("Unable to get an ID of created tag", 40024)
-                );
+                        new ServiceException("Unable to get an ID of created tag", 40024));
 
         return getById(newTagId);
     }

@@ -110,7 +110,7 @@ public class CertificatesServiceImpl implements CertificatesService {
     @Transactional
     @Override
     public CertificateDTOResp create(CertificateDTOReq certificateDTOReq) {
-        if (certificateDAO.checkIfCertificateNameAlreadyExists(certificateDTOReq.name())) {
+        if (certificateDAO.checkIfCertificateWithNameExists(certificateDTOReq.name())) {
             throw new EntityAlreadyExistsException(ENTITY_NAME, certificateDTOReq.name());
         }
 
@@ -118,7 +118,6 @@ public class CertificatesServiceImpl implements CertificatesService {
                 .orElseThrow(() ->
                         new ServiceException("Unable to get an ID of created certificate", 40023)
                 );
-
         certificateDTOReq.tags().forEach(tagName -> addTagToCertificateEntity(newCertificateId, tagName));
 
         return getById(newCertificateId);

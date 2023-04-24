@@ -18,6 +18,8 @@ import java.util.Optional;
 public class CertificateDAO {
     private static final String GET_CERTIFICATE_BY_ID = "SELECT * FROM gift_certificate WHERE id = ?";
 
+    private static final String COUNT_CERTIFICATES_WITH_SPECIFIED_NAME = "SELECT COUNT(*) FROM gift_certificate WHERE name = ?";
+
     private static final String GET_ALL_CERTIFICATES = "SELECT * FROM gift_certificate";
 
     private static final String GET_CERTIFICATES_BY_TAG_NAME = "SELECT gc.* FROM gift_certificate gc " +
@@ -47,6 +49,13 @@ public class CertificateDAO {
         return jdbcTemplate.query(GET_CERTIFICATE_BY_ID, new CertificateDAOMapper(), id)
                 .stream()
                 .findFirst();
+    }
+
+    public boolean checkIfCertificateWithNameExists(String name) {
+        Integer count = jdbcTemplate
+                .queryForObject(COUNT_CERTIFICATES_WITH_SPECIFIED_NAME, Integer.class, name);
+
+        return count != null && count > 0;
     }
 
     public Optional<List<Certificate>> getAll() {
