@@ -18,7 +18,7 @@ import java.util.Optional;
 public class TagDAO {
     private static final String CREATE_TAG = "INSERT INTO tag (name) VALUES (?)";
 
-//    private static final String GET_ALL_TAGS = "SELECT * FROM tag ORDER BY id";
+    private static final String GET_ALL_TAGS = "SELECT * FROM tag ORDER BY id";
 
     private static final String GET_TAGS_BY_CERTIFICATE_ID = "SELECT id, name FROM tag " +
             "INNER JOIN gift_certificates_tags gct ON tag.id = gct.tag_id " +
@@ -28,7 +28,9 @@ public class TagDAO {
 
     private static final String GET_TAG_ID_BY_NAME = "SELECT id FROM tag WHERE name = ?";
 
-//    private static final String DELETE_TAG = "DELETE FROM tag WHERE id = ?";
+    private static final String CHECK_TAG_NAME_EXISTENCE = "SELECT COUNT(*) FROM tag WHERE name = ?";
+
+    private static final String DELETE_TAG = "DELETE FROM tag WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -48,14 +50,21 @@ public class TagDAO {
                 .findFirst();
     }
 
-//    public List<Tag> getAll() {
-//        return jdbcTemplate
-//                .query(GET_ALL_TAGS, new TagDAOMapper());
-//    }
+    public Optional<List<Tag>> getAll() {
+        List<Tag> tagsList = jdbcTemplate.query(GET_ALL_TAGS, new TagDAOMapper());
+
+        return tagsList.size() > 0 ? Optional.of(tagsList) : Optional.empty();
+    }
 
     public List<Tag> getTagsByCertificateId(int certificateId) {
         return jdbcTemplate
                 .query(GET_TAGS_BY_CERTIFICATE_ID, new TagDAOMapper(), certificateId);
+    }
+
+    public boolean checkIfTagNameAlreadyExists(String name) {
+        return jdbcTemplate
+                .query(CHECK_TAG_NAME_EXISTENCE, new TagDAOMapper(), name)
+                .size() > 0;
     }
 
     public Optional<Number> create(Tag tag) {
@@ -70,10 +79,7 @@ public class TagDAO {
         return Optional.ofNullable(keyHolder.getKey());
     }
 
-//    public void deleteById(int id) {
-//        int deletedRows = jdbcTemplate.update(DELETE_TAG, id);
-//        if (deletedRows == 0) {
-//            throw new EntityNotFoundException("Unable to delete tag with id=" + id + ". It was not found");
-//        }
-//    }
+    public int deleteById(int id) {
+        return jdbcTemplate.update(DELETE_TAG, id);
+    }
 }

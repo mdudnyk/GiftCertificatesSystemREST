@@ -19,7 +19,7 @@ public interface CertificatesService {
 
     CertificateDTOResp create(CertificateDTOReq certificateDTOReq);
 
-//    CertificateDTOResp update(int id, CertificateDTOReq certificateDTOReq);
+    CertificateDTOResp update(int id, CertificateDTOReq certificateDTOReq);
 
-//    void deleteById(int id);
+    void deleteById(int id);
 }

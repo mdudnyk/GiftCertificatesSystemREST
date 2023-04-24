@@ -10,6 +10,10 @@ public class EntityNotFoundException extends ServiceException {
         super("Requested " + entityName + " not found (id = " + entityId + ")", errorCode);
     }
 
+    public EntityNotFoundException(String entityName, String fieldName) {
+        super("Requested " + entityName + " not found (name = " + fieldName + ")", errorCode);
+    }
+
     public EntityNotFoundException(String errorMessage) {
         super(errorMessage, errorCode);
     }

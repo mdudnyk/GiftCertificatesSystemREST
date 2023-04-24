@@ -3,8 +3,6 @@ package com.epam.esm.controllers;
 import com.epam.esm.models.dtos.certificate.CertificateDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
 import com.epam.esm.services.CertificatesService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -12,11 +10,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.http.HttpHeaders.LOCATION;
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 /**
  * @author Myroslav Dudnyk
  */
 @RestController
-@RequestMapping(value = "/certificates", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/certificates", produces = APPLICATION_JSON_VALUE)
 public class CertificatesController {
     private final CertificatesService certificatesService;
 
@@ -35,13 +37,12 @@ public class CertificatesController {
             @RequestParam(value = "searchText", required = false) String searchText,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortOrder", required = false) String sortOrder) {
-        List<CertificateDTOResp> certificates =
-                certificatesService.getCertificates(tagName, searchText, sortBy, sortOrder);
 
-        return new ResponseEntity<>(certificates, HttpStatus.OK);
+        return ResponseEntity.ok(certificatesService
+                .getCertificates(tagName, searchText, sortBy, sortOrder));
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    @PostMapping(consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<CertificateDTOResp> create(@RequestBody CertificateDTOReq certificateDTOReq) {
         CertificateDTOResp createdCertificate = certificatesService.create(certificateDTOReq);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -51,19 +52,20 @@ public class CertificatesController {
         return ResponseEntity.created(location).body(createdCertificate);
     }
 
-//    @PatchMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
-//    public ResponseEntity<CertificateDTOResp> update(@PathVariable int id, @RequestBody CertificateDTOReq certificate) {
-//        CertificateDTOResp updatedCertificate = certificatesServiceImpl.update(id, certificate);
-//        String location = ServletUriComponentsBuilder.fromCurrentRequest().toUriString();
-//
-//        return ResponseEntity.ok()
-//                .header(HttpHeaders.LOCATION, location)
-//                .body(updatedCertificate);
-//    }
+    @PatchMapping(value = "/{id}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<CertificateDTOResp> update(@PathVariable int id,
+                                                     @RequestBody CertificateDTOReq certificateDTOReq) {
+        CertificateDTOResp updatedCertificate = certificatesService.update(id, certificateDTOReq);
+        String location = ServletUriComponentsBuilder.fromCurrentRequest().toUriString();
 
-//    @DeleteMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void delete(@PathVariable("id") int id) {
-//        certificatesServiceImpl.deleteById(id);
-//    }
+        return ResponseEntity.ok()
+                .header(LOCATION, location)
+                .body(updatedCertificate);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(NO_CONTENT)
+    public void delete(@PathVariable("id") int id) {
+        certificatesService.deleteById(id);
+    }
 }

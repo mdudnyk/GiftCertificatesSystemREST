@@ -2,7 +2,6 @@ package com.epam.esm.dao;
 
 import com.epam.esm.dao.mappers.CertificateDAOMapper;
 import com.epam.esm.models.Certificate;
-import com.epam.esm.services.exceptions.EntityNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -24,17 +23,20 @@ public class CertificateDAO {
     private static final String GET_CERTIFICATES_BY_TAG_NAME = "SELECT gc.* FROM gift_certificate gc " +
             "JOIN gift_certificates_tags gct ON gc.id = gct.certificate_id " +
             "JOIN tag t ON gct.tag_id = t.id " +
-            "WHERE t.name=?";
+            "WHERE t.name = ?";
 
     private static final String CREATE_CERTIFICATE =
             "INSERT INTO gift_certificate (name, description, price, duration) VALUES (?, ?, ?, ?)";
 
-//    private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name=?, description=?, " +
-//            "price=?, duration=? WHERE id=?";
+    private static final String CHECK_CERTIFICATE_NAME_EXISTENCE = "SELECT COUNT(*) FROM gift_certificate WHERE name = ?";
 
-//    private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id=?";
+    private static final String UPDATE_CERTIFICATE_BY_ID = "UPDATE gift_certificate SET name = ?, description = ?, " +
+            "price = ?, duration = ? WHERE id = ?";
+
+    private static final String DELETE_CERTIFICATE = "DELETE FROM gift_certificate WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
+
 
     public CertificateDAO(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -50,12 +52,14 @@ public class CertificateDAO {
     public Optional<List<Certificate>> getAll() {
         List<Certificate> resultList = jdbcTemplate
                 .query(GET_ALL_CERTIFICATES, new CertificateDAOMapper());
+
         return resultList.size() > 0 ? Optional.of(resultList) : Optional.empty();
     }
 
     public Optional<List<Certificate>> getCertificatesByTagName(String tagName) {
         List<Certificate> resultList = jdbcTemplate
                 .query(GET_CERTIFICATES_BY_TAG_NAME, new CertificateDAOMapper(), tagName);
+
         return resultList.size() > 0 ? Optional.of(resultList) : Optional.empty();
     }
 
@@ -74,19 +78,22 @@ public class CertificateDAO {
         return Optional.ofNullable(keyHolder.getKey());
     }
 
-//    public void update(int certificateId, Certificate certificate) {
-//        jdbcTemplate.update(UPDATE_CERTIFICATE_BY_ID,
-//                certificate.getName(),
-//                certificate.getDescription(),
-//                certificate.getPrice(),
-//                certificate.getDuration(),
-//                certificateId);
-//    }
+    public boolean checkIfCertificateNameAlreadyExists(String name) {
+        return jdbcTemplate
+                .query(CHECK_CERTIFICATE_NAME_EXISTENCE, new CertificateDAOMapper(), name)
+                .size() > 0;
+    }
 
-//    public void deleteById(int id) {
-//        int deletedRows = jdbcTemplate.update(DELETE_CERTIFICATE, id);
-//        if (deletedRows == 0) {
-//            throw new EntityNotFoundException("Unable to delete certificate with id=" + id + ". It was not found");
-//        }
-//    }
+    public int update(int certificateId, Certificate certificate) {
+        return jdbcTemplate.update(UPDATE_CERTIFICATE_BY_ID,
+                certificate.getName(),
+                certificate.getDescription(),
+                certificate.getPrice(),
+                certificate.getDuration(),
+                certificateId);
+    }
+
+    public int deleteById(int id) {
+        return jdbcTemplate.update(DELETE_CERTIFICATE, id);
+    }
 }

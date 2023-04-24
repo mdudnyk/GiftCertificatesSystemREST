@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING;
+
 /**
  * @author Myroslav Dudnyk
  */
@@ -25,11 +27,11 @@ public class Certificate implements Serializable {
     private Integer duration;
 
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
+            (shape = STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime createDate;
 
     @JsonFormat
-            (shape = JsonFormat.Shape.STRING, pattern = ISO_8601_PATTERN)
+            (shape = STRING, pattern = ISO_8601_PATTERN)
     private LocalDateTime lastUpdateDate;
 
 
