@@ -106,12 +106,15 @@ public class Certificate implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         final Certificate that = (Certificate) o;
-        return id == that.id && name.equals(that.name) && price.equals(that.price);
+        return Objects.equals(name, that.name)
+                && Objects.equals(description, that.description)
+                && Objects.equals(price, that.price)
+                && Objects.equals(duration, that.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, price);
+        return Objects.hash(name, description, price, duration);
     }
 
     @Override

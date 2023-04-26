@@ -14,4 +14,6 @@ public interface CertificateMapper {
     Certificate toEntity(CertificateDTOReq certificateDTOReq);
 
     CertificateDTOResp toDTO(Certificate certificate, List<String> tagNames);
+
+    Certificate toUpdatedEntity(CertificateDTOReq certDTOReq, CertificateDTOResp certOldEntity);
 }

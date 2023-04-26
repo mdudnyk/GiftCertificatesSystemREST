@@ -2,7 +2,6 @@ package com.epam.esm.services.impl;
 
 import com.epam.esm.dao.CertificateDAO;
 import com.epam.esm.models.Certificate;
-import com.epam.esm.models.Tag;
 import com.epam.esm.models.dtos.tag.TagDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
@@ -15,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +34,10 @@ public class CertificatesServiceImpl implements CertificatesService {
 
     private final TagsService tagsService;
 
-    public CertificatesServiceImpl(CertificatesTagsService certificatesTagsService, CertificateMapper certificateMapper, CertificateDAO certificateDAO, TagsService tagsService) {
+    public CertificatesServiceImpl(CertificatesTagsService certificatesTagsService,
+                                   CertificateMapper certificateMapper,
+                                   CertificateDAO certificateDAO,
+                                   TagsService tagsService) {
         this.certificatesTagsService = certificatesTagsService;
         this.certificateMapper = certificateMapper;
         this.certificateDAO = certificateDAO;
@@ -45,7 +46,8 @@ public class CertificatesServiceImpl implements CertificatesService {
 
     @Override
     public CertificateDTOResp getById(int id) {
-        Certificate certificate = certificateDAO.getById(id).orElseThrow(() -> new EntityNotFoundException(ENTITY_NAME, id));
+        Certificate certificate = certificateDAO.getById(id)
+                .orElseThrow(() -> new EntityNotFoundException(ENTITY_NAME, id));
         List<String> tagNames = tagsService.getAllNamesByCertificateId(id);
 
         return certificateMapper.toDTO(certificate, tagNames);
@@ -57,12 +59,15 @@ public class CertificatesServiceImpl implements CertificatesService {
         certificates = filterCertificatesBySearchText(certificates, searchText);
         sortCertificates(certificates, sortBy, sortOrder);
 
-        return certificates.stream().map(cert -> certificateMapper.toDTO(cert, tagsService.getAllNamesByCertificateId(cert.getId()))).collect(Collectors.toList());
+        return certificates.stream()
+                .map(cert -> certificateMapper.toDTO(cert, tagsService.getAllNamesByCertificateId(cert.getId())))
+                .collect(Collectors.toList());
     }
 
     private List<Certificate> getCertificatesByTagNameOrGetAll(String tagName) {
         if (StringUtils.isNotEmpty(tagName)) {
-            return certificateDAO.getCertificatesByTagName(tagName).orElseThrow(() -> new EntityNotFoundException("Requested certificates not found (tag name = '" + tagName + "')"));
+            return certificateDAO.getCertificatesByTagName(tagName)
+                    .orElseThrow(() -> new EntityNotFoundException("Requested certificates not found (tag name = '" + tagName + "')"));
         }
 
         return certificateDAO.getAll().orElseThrow(() -> new EntityNotFoundException("Certificates not found"));
@@ -70,7 +75,11 @@ public class CertificatesServiceImpl implements CertificatesService {
 
     private List<Certificate> filterCertificatesBySearchText(List<Certificate> certificates, String searchText) {
         if (StringUtils.isNotEmpty(searchText)) {
-            return Optional.of(certificates.stream().filter(cert -> cert.getName().contains(searchText) || cert.getDescription().contains(searchText)).collect(Collectors.toList())).orElseThrow(() -> new EntityNotFoundException("Requested certificates not found (part of name/description = '" + searchText + "')"));
+            return Optional.of(certificates.stream()
+                            .filter(cert -> cert.getName().contains(searchText) || cert.getDescription().contains(searchText))
+                            .collect(Collectors.toList()))
+                    .orElseThrow(() -> new EntityNotFoundException("Requested certificates not found " +
+                            "(part of name/description = '" + searchText + "')"));
         }
 
         return certificates;
@@ -78,9 +87,13 @@ public class CertificatesServiceImpl implements CertificatesService {
 
     private void sortCertificates(List<Certificate> certificates, String sortBy, String sortOrder) {
         try {
-            SortBy sortByEnum = StringUtils.isNotEmpty(sortBy) ? SortBy.valueOf(sortBy.toUpperCase()) : SortBy.ID;
+            SortBy sortByEnum = StringUtils.isNotEmpty(sortBy)
+                    ? SortBy.valueOf(sortBy.toUpperCase())
+                    : SortBy.ID;
 
-            SortOrder sortOrderEnum = StringUtils.isNotEmpty(sortOrder) ? SortOrder.valueOf(sortOrder.toUpperCase()) : SortOrder.ASC;
+            SortOrder sortOrderEnum = StringUtils.isNotEmpty(sortOrder)
+                    ? SortOrder.valueOf(sortOrder.toUpperCase())
+                    : SortOrder.ASC;
 
             switch (sortOrderEnum) {
                 case ASC -> certificates.sort(sortByEnum.comparator);
@@ -98,7 +111,8 @@ public class CertificatesServiceImpl implements CertificatesService {
             throw new EntityAlreadyExistsException(ENTITY_NAME, certificateDTOReq.name());
         }
 
-        int newCertificateId = (int) certificateDAO.create(certificateMapper.toEntity(certificateDTOReq)).orElseThrow(() -> new ServiceException("Unable to get an ID of created certificate", 40023));
+        int newCertificateId = (int) certificateDAO.create(certificateMapper.toEntity(certificateDTOReq))
+                .orElseThrow(() -> new ServiceException("Unable to get an ID of created certificate", 40023));
         certificateDTOReq.tags().forEach(tagName -> attachTagToCertificate(tagName, newCertificateId));
 
         return getById(newCertificateId);
@@ -124,6 +138,10 @@ public class CertificatesServiceImpl implements CertificatesService {
             updateCertificateTags(certId, certOldEntity.tags(), certDTOReq.tags());
         }
 
+        Certificate certificate = certificateMapper.toUpdatedEntity(certDTOReq, certOldEntity);
+
+        certificateDAO.update(certId, certificate);
+
         return getById(certId);
     }
 
@@ -137,39 +155,22 @@ public class CertificatesServiceImpl implements CertificatesService {
     }
 
     private void removeIrrelevantTagsFromCertificateDBEntity(int certId, List<String> oldTagNamesList, List<String> newTagNamesList) {
-        List<String> tagNamesToRemove = getTagNamesFromSourceWhichNotPresentedInProvider(oldTagNamesList, newTagNamesList);
-
-        tagNamesToRemove.forEach(tagName -> certificatesTagsService.deleteTagFromCertificate(tagsService.getTagIdByName(tagName), certId));
+        List<String> tagNamesToRemove =
+                getTagNamesFromSourceWhichNotPresentedInProvider(oldTagNamesList, newTagNamesList);
+        tagNamesToRemove
+                .forEach(tagName -> certificatesTagsService
+                        .deleteTagFromCertificate(tagsService
+                                .getTagIdByName(tagName), certId));
     }
 
     private void attachNewTagsPassedInUpdateRequestToCertificateDBEntity(int certId, List<String> oldTagNamesList, List<String> newTagNamesList) {
-        List<String> tagNamesToAttach = getTagNamesFromSourceWhichNotPresentedInProvider(newTagNamesList, oldTagNamesList);
-
-        tagNamesToAttach.forEach(tagName -> attachTagToCertificate(tagName, certId));
+        List<String> tagNamesToAttach =
+                getTagNamesFromSourceWhichNotPresentedInProvider(newTagNamesList, oldTagNamesList);
+        tagNamesToAttach
+                .forEach(tagName -> attachTagToCertificate(tagName, certId));
     }
 
-//    // Fills null fields of certificateNewEntity with values from certificateOldEntity
-//    // and returns the number of updated fields
-//    private int fillNullFieldsOfNewEntityWithFieldsFromOldEntity(final CertificateDTOReq certificateNew, final Certificate certificateOld) {
-//        return 0;
-//    }
-//
-//    // Helper method that updates a field of a certificate entity
-//    private <T> int updateField(Supplier<T> newValueGetter, Supplier<T> oldValueGetter, Consumer<T> valueSetter) {
-//        T newValue = newValueGetter.get();
-//        T oldValue = oldValueGetter.get();
-//
-//        if (newValue != null && !newValue.equals(oldValue)) {
-//            valueSetter.accept(newValue);
-//            return 1;
-//        } else if (newValue == null) {
-//            valueSetter.accept(oldValue);
-//            return 1;
-//        }
-//
-//        return 0;
-//    }
-
+    @Override
     public void deleteById(int id) {
         int deletedRows = certificateDAO.deleteById(id);
 
@@ -179,7 +180,9 @@ public class CertificatesServiceImpl implements CertificatesService {
     }
 
     public enum SortBy {
-        ID(Comparator.comparing(certificate -> certificate.getId())), NAME(Comparator.comparing(certificate -> certificate.getName())), DATE(Comparator.comparing(certificate -> certificate.getCreateDate()));
+        ID(Comparator.comparing(certificate -> certificate.getId())),
+        NAME(Comparator.comparing(certificate -> certificate.getName())),
+        DATE(Comparator.comparing(certificate -> certificate.getCreateDate()));
 
         private final Comparator<Certificate> comparator;
 

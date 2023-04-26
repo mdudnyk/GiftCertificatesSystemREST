@@ -7,12 +7,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.*;
+
 /**
  * @author Myroslav Dudnyk
  */
 @Component
 public class CertificateMapperImpl implements CertificateMapper {
-
     @Override
     public Certificate toEntity(final CertificateDTOReq certificateDTOReq) {
         return new Certificate(
@@ -31,6 +32,16 @@ public class CertificateMapperImpl implements CertificateMapper {
                 certificate.getDescription(),
                 certificate.getPrice(),
                 certificate.getDuration()
+        );
+    }
+
+    @Override
+    public Certificate toUpdatedEntity(final CertificateDTOReq certDTOReq, final CertificateDTOResp certOldEntity) {
+        return new Certificate(
+                isEmpty(certDTOReq.name()) ? certOldEntity.name() : certDTOReq.name(),
+                isEmpty(certDTOReq.description()) ? certOldEntity.description() : certDTOReq.description(),
+                certDTOReq.price() == null ? certOldEntity.price() : certDTOReq.price(),
+                certDTOReq.duration() == null ? certOldEntity.duration() : certDTOReq.duration()
         );
     }
 }
