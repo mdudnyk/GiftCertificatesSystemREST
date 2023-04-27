@@ -1,5 +1,6 @@
 package com.epam.esm.config;
 
+import com.epam.esm.config.exceptions.ConfigurationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.sql.DataSource;
+
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * @author Myroslav Dudnyk
@@ -38,10 +41,10 @@ public class SpringConfig {
 
         String driverClassName = env.getProperty("spring.datasource.driver-class-name");
 
-        if (driverClassName != null && !driverClassName.isBlank()) {
+        if (isNotEmpty(driverClassName)) {
             dataSource.setDriverClassName(driverClassName);
         } else {
-            throw new NullPointerException("The database driver class name string can not be null or empty");
+            throw new ConfigurationException("The database driver class name string can not be null or empty");
         }
 
         dataSource.setUrl(env.getProperty("spring.datasource.url"));
