@@ -5,6 +5,7 @@ import com.epam.esm.models.Certificate;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
 import com.epam.esm.services.CertificatesTagsService;
 import com.epam.esm.services.TagsService;
+import com.epam.esm.services.exceptions.EntityNotDeletedException;
 import com.epam.esm.services.exceptions.EntityNotFoundException;
 import com.epam.esm.services.mappers.certificate.CertificateMapper;
 import org.junit.jupiter.api.Assertions;
@@ -20,8 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Myroslav Dudnyk
@@ -67,5 +67,21 @@ class CertificatesServiceImplTest {
         when(certificateDAO.getById(anyInt())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> certificatesService.getById(TEST_CERTIFICATE_ID));
+    }
+
+    @Test
+    void testDeleteById() {
+        when(certificateDAO.deleteById(TEST_CERTIFICATE_ID)).thenReturn(1);
+
+        certificatesService.deleteById(TEST_CERTIFICATE_ID);
+
+        verify(certificateDAO).deleteById(TEST_CERTIFICATE_ID);
+    }
+
+    @Test
+    void testDeleteByIdThrowsEntityNotDeletedException() {
+        when(certificateDAO.deleteById(TEST_CERTIFICATE_ID)).thenReturn(0);
+
+        assertThrows(EntityNotDeletedException.class, () -> certificatesService.deleteById(TEST_CERTIFICATE_ID));
     }
 }
