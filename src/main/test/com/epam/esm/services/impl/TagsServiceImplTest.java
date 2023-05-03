@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Collections.*;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -54,6 +54,7 @@ class TagsServiceImplTest {
         TagDTOResp result = tagsService.getById(TEST_TAG_ID);
 
         assertEquals(tagDTOResp, result);
+        verify(tagDAO).getById(TEST_TAG_ID);
     }
 
     @Test
@@ -61,6 +62,7 @@ class TagsServiceImplTest {
         when(tagDAO.getById(TEST_TAG_ID)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> tagsService.getById(TEST_TAG_ID));
+        verify(tagDAO).getById(TEST_TAG_ID);
     }
 
     @Test
@@ -73,6 +75,7 @@ class TagsServiceImplTest {
         List<String> result = tagsService.getAllNamesByCertificateId(TEST_CERTIFICATE_ID);
 
         assertEquals(singletonList(TEST_TAG_NAME), result);
+        verify(tagDAO).getTagsByCertificateId(TEST_CERTIFICATE_ID);
     }
 
     @Test
@@ -82,6 +85,7 @@ class TagsServiceImplTest {
         int result = tagsService.getTagIdByName(TEST_TAG_NAME);
 
         assertEquals(TEST_TAG_ID, result);
+        verify(tagDAO).getTagIdByName(TEST_TAG_NAME);
     }
 
     @Test
@@ -89,6 +93,7 @@ class TagsServiceImplTest {
         when(tagDAO.getTagIdByName(TEST_TAG_NAME)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> tagsService.getTagIdByName(TEST_TAG_NAME));
+        verify(tagDAO).getTagIdByName(TEST_TAG_NAME);
     }
 
     @Test
@@ -103,6 +108,8 @@ class TagsServiceImplTest {
         List<TagDTOResp> result = tagsService.getAll();
 
         assertEquals(singletonList(tagDTOResp), result);
+        verify(tagDAO).getAll();
+        verify(tagMapper).toDTO(tag);
     }
 
     @Test
@@ -110,6 +117,7 @@ class TagsServiceImplTest {
         when(tagDAO.getAll()).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> tagsService.getAll());
+        verify(tagDAO).getAll();
     }
 
     @Test
@@ -131,6 +139,8 @@ class TagsServiceImplTest {
         TagDTOResp result = tagsService.create(tagDTOReq);
 
         assertEquals(tagDTOResp, result);
+        verify(tagMapper).toDTO(tag);
+        verify(tagMapper).toEntity(tagDTOReq);
         verify(tagDAO).create(tag);
         verify(tagDAO).getById(TEST_TAG_ID);
         verify(tagDAO).checkIfTagWithNameExists(TEST_TAG_NAME);
@@ -143,6 +153,7 @@ class TagsServiceImplTest {
         when(tagDAO.checkIfTagWithNameExists(TEST_TAG_NAME)).thenReturn(true);
 
         assertThrows(EntityAlreadyExistsException.class, () -> tagsService.create(tagDTOReq));
+        verify(tagDAO).checkIfTagWithNameExists(TEST_TAG_NAME);
     }
 
     @Test
@@ -155,6 +166,9 @@ class TagsServiceImplTest {
         when(tagMapper.toEntity(tagDTOReq)).thenReturn(tag);
 
         assertThrows(ServiceException.class, () -> tagsService.create(tagDTOReq));
+        verify(tagDAO).checkIfTagWithNameExists(TEST_TAG_NAME);
+        verify(tagDAO).create(tag);
+        verify(tagMapper).toEntity(tagDTOReq);
     }
 
     @Test
@@ -171,5 +185,6 @@ class TagsServiceImplTest {
         when(tagDAO.deleteById(TEST_TAG_ID)).thenReturn(0);
 
         assertThrows(EntityNotDeletedException.class, () -> tagsService.deleteById(TEST_TAG_ID));
+        verify(tagDAO).deleteById(TEST_TAG_ID);
     }
 }

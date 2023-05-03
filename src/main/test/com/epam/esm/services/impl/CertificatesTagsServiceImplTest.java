@@ -26,12 +26,14 @@ class CertificatesTagsServiceImplTest {
     @Test
     public void testAttachTagToCertificate() {
         certificatesTagsService.attachTagToCertificate(TEST_TAG_ID, TEST_CERTIFICATE_ID);
+
         verify(certificateTagDAO).create(TEST_CERTIFICATE_ID, TEST_TAG_ID);
     }
 
     @Test
     public void testDeleteTagFromCertificate() {
         certificatesTagsService.deleteTagFromCertificate(TEST_TAG_ID, TEST_CERTIFICATE_ID);
+
         verify(certificateTagDAO).deleteByCertificateIdAndTagId(TEST_CERTIFICATE_ID, TEST_TAG_ID);
     }
 }
