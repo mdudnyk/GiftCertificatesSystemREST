@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @author Myroslav Dudnyk
  */
-public record CertificateDTOReq (
+public record CertificateDTOReq(
         String name,
         List<String> tags,
         String description,

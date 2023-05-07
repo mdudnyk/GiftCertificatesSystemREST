@@ -12,16 +12,11 @@ import org.springframework.stereotype.Component;
 public class TagMapperImpl implements TagMapper {
     @Override
     public Tag toEntity(final TagDTOReq tagDTOReq) {
-        return new Tag(
-                tagDTOReq.name()
-        );
+        return new Tag(tagDTOReq.name());
     }
 
     @Override
     public TagDTOResp toDTO(final Tag tag) {
-        return new TagDTOResp(
-                tag.getId(),
-                tag.getName()
-        );
+        return new TagDTOResp(tag.getId(), tag.getName());
     }
 }

@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 import static org.springframework.http.HttpHeaders.LOCATION;
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**

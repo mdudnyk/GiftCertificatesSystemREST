@@ -2,14 +2,14 @@ package com.epam.esm.services.impl;
 
 import com.epam.esm.dao.CertificateDAO;
 import com.epam.esm.models.Certificate;
-import com.epam.esm.models.dtos.tag.TagDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
+import com.epam.esm.models.dtos.tag.TagDTOReq;
+import com.epam.esm.services.CertificatesService;
 import com.epam.esm.services.CertificatesTagsService;
 import com.epam.esm.services.TagsService;
 import com.epam.esm.services.exceptions.*;
 import com.epam.esm.services.mappers.certificate.CertificateMapper;
-import com.epam.esm.services.CertificatesService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -10,7 +10,6 @@ import com.epam.esm.services.exceptions.EntityNotDeletedException;
 import com.epam.esm.services.exceptions.EntityNotFoundException;
 import com.epam.esm.services.exceptions.UnsupportedSortingParameter;
 import com.epam.esm.services.mappers.certificate.CertificateMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,12 +19,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.Collections.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
@@ -34,58 +32,79 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class CertificatesServiceImplTest {
-    private static final String TEST_TAG_NAME = "test_tag_name";
+    private static final String TAG_NAME = "Tag1";
 
-    private static final int TEST_CERTIFICATE_ID = 1;
-    private static final int SECOND_TEST_CERTIFICATE_ID = 2;
-    private static final String TEST_CERTIFICATE_NAME = "1'st_test_name";
-    private static final String SECOND_TEST_CERTIFICATE_NAME = "2'nd_test_name";
-    private static final List<String> TEST_TAG_NAMES_LIST = singletonList(TEST_TAG_NAME);
-    private static final String TEST_CERTIFICATE_DESCRIPTION = "test_certificate_description";
-    private static final BigDecimal TEST_CERTIFICATE_PRICE = BigDecimal.TEN;
-    private static final int TEST_CERTIFICATE_DURATION = 1;
+    private static final int CERTIFICATE_ID = 1;
+    private static final int SECOND_CERTIFICATE_ID = 2;
 
-    private static final Certificate TEST_CERTIFICATE;
-    private static final Certificate SECOND_TEST_CERTIFICATE;
-    private static final CertificateDTOResp TEST_CERTIFICATE_DTO_RESP;
-    private static final CertificateDTOResp SECOND_TEST_CERTIFICATE_DTO_RESP;
+    private static final String CERTIFICATE_NAME = "(B) First Name";
+    private static final String SECOND_CERTIFICATE_NAME = "(A) Second Name";
+
+    private static final List<String> TAG_NAMES_LIST = List.of(TAG_NAME, "Tag2", "Tag3");
+    private static final List<String> SECOND_TAG_NAMES_LIST = List.of(TAG_NAME, "Tag4", "Tag5");
+
+    private static final String CERTIFICATE_DESCRIPTION = "First Description";
+    private static final String PART_OF_DESCRIPTION = "First";
+    private static final String SECOND_CERTIFICATE_DESCRIPTION = "Second Description";
+
+    private static final BigDecimal CERTIFICATE_PRICE = BigDecimal.TEN;
+    private static final BigDecimal SECOND_CERTIFICATE_PRICE = BigDecimal.ONE;
+
+    private static final int CERTIFICATE_DURATION = 10;
+    private static final int SECOND_CERTIFICATE_DURATION = 1;
+
+    private static final Certificate CERTIFICATE;
+    private static final Certificate SECOND_CERTIFICATE;
+
+    private static final CertificateDTOResp CERTIFICATE_DTO_RESP;
+    private static final CertificateDTOResp SECOND_CERTIFICATE_DTO_RESP;
+
+    private static final List<Certificate> CERTIFICATES;
+    private static final List<CertificateDTOResp> CERTIFICATES_DTO_RESP;
 
     static {
-        TEST_CERTIFICATE = new Certificate(
-                TEST_CERTIFICATE_NAME,
-                TEST_CERTIFICATE_DESCRIPTION,
-                TEST_CERTIFICATE_PRICE,
-                TEST_CERTIFICATE_DURATION
+        CERTIFICATE = new Certificate(
+                CERTIFICATE_NAME,
+                CERTIFICATE_DESCRIPTION,
+                CERTIFICATE_PRICE,
+                CERTIFICATE_DURATION
         );
-        TEST_CERTIFICATE.setId(TEST_CERTIFICATE_ID);
-        TEST_CERTIFICATE.setCreateDate(LocalDateTime.now().minusDays(2));
+        CERTIFICATE.setId(CERTIFICATE_ID);
+        CERTIFICATE.setCreateDate(LocalDateTime.now().plusDays(1));
 
-        TEST_CERTIFICATE_DTO_RESP = new CertificateDTOResp(
-                TEST_CERTIFICATE_ID,
-                TEST_CERTIFICATE_NAME,
-                TEST_TAG_NAMES_LIST,
-                TEST_CERTIFICATE_DESCRIPTION,
-                TEST_CERTIFICATE_PRICE,
-                TEST_CERTIFICATE_DURATION
+        SECOND_CERTIFICATE = new Certificate(
+                SECOND_CERTIFICATE_NAME,
+                SECOND_CERTIFICATE_DESCRIPTION,
+                SECOND_CERTIFICATE_PRICE,
+                SECOND_CERTIFICATE_DURATION
+        );
+        SECOND_CERTIFICATE.setId(SECOND_CERTIFICATE_ID);
+        SECOND_CERTIFICATE.setCreateDate(LocalDateTime.now());
+
+
+        CERTIFICATE_DTO_RESP = new CertificateDTOResp(
+                CERTIFICATE_ID,
+                CERTIFICATE_NAME,
+                TAG_NAMES_LIST,
+                CERTIFICATE_DESCRIPTION,
+                CERTIFICATE_PRICE,
+                CERTIFICATE_DURATION
         );
 
-        SECOND_TEST_CERTIFICATE = new Certificate(
-                SECOND_TEST_CERTIFICATE_NAME,
-                TEST_CERTIFICATE_DESCRIPTION,
-                TEST_CERTIFICATE_PRICE,
-                TEST_CERTIFICATE_DURATION
+        SECOND_CERTIFICATE_DTO_RESP = new CertificateDTOResp(
+                SECOND_CERTIFICATE_ID,
+                SECOND_CERTIFICATE_NAME,
+                SECOND_TAG_NAMES_LIST,
+                SECOND_CERTIFICATE_DESCRIPTION,
+                SECOND_CERTIFICATE_PRICE,
+                SECOND_CERTIFICATE_DURATION
         );
-        SECOND_TEST_CERTIFICATE.setId(SECOND_TEST_CERTIFICATE_ID);
-        SECOND_TEST_CERTIFICATE.setCreateDate(LocalDateTime.now());
 
-        SECOND_TEST_CERTIFICATE_DTO_RESP = new CertificateDTOResp(
-                SECOND_TEST_CERTIFICATE_ID,
-                SECOND_TEST_CERTIFICATE_NAME,
-                TEST_TAG_NAMES_LIST,
-                TEST_CERTIFICATE_DESCRIPTION,
-                TEST_CERTIFICATE_PRICE,
-                TEST_CERTIFICATE_DURATION
-        );
+        CERTIFICATES = new ArrayList<>();
+        CERTIFICATES.add(CERTIFICATE);
+        CERTIFICATES.add(SECOND_CERTIFICATE);
+
+        CERTIFICATES_DTO_RESP = List.of(CERTIFICATE_DTO_RESP, SECOND_CERTIFICATE_DTO_RESP);
     }
 
     @Mock
@@ -101,45 +120,50 @@ class CertificatesServiceImplTest {
     private CertificatesTagsService certificatesTagsService;
 
     @InjectMocks
-    private  CertificatesServiceImpl certificatesService;
+    private CertificatesServiceImpl certificatesService;
 
 
     @Test
     void testGetByIdSuccess() {
-        when(certificateDAO.getById(anyInt())).thenReturn(Optional.of(TEST_CERTIFICATE));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(any(Certificate.class), anyList())).thenReturn(TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getById(anyInt())).thenReturn(Optional.of(CERTIFICATE));
+        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(any(Certificate.class), anyList())).thenReturn(CERTIFICATE_DTO_RESP);
 
-        assertEquals(TEST_CERTIFICATE_DTO_RESP, certificatesService.getById(TEST_CERTIFICATE_ID));
-        verify(certificateDAO).getById(anyInt());
-        verify(tagsService).getAllNamesByCertificateId(anyInt());
-        verify(certificateMapper).toDTO(any(Certificate.class), anyList());
+        assertEquals(CERTIFICATE_DTO_RESP, certificatesService.getById(CERTIFICATE_ID));
+        verify(certificateDAO).getById(CERTIFICATE_ID);
+        verify(tagsService).getAllNamesByCertificateId(CERTIFICATE_ID);
+        verify(certificateMapper).toDTO(CERTIFICATE, TAG_NAMES_LIST);
     }
 
     @Test
     void testGetByIdWhenCertificateNotFound() {
         when(certificateDAO.getById(anyInt())).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> certificatesService.getById(TEST_CERTIFICATE_ID));
-        verify(certificateDAO).getById(anyInt());
+        assertThrows(EntityNotFoundException.class, () -> certificatesService.getById(CERTIFICATE_ID));
+        verify(certificateDAO).getById(CERTIFICATE_ID);
         verify(tagsService, never()).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, never()).toDTO(any(Certificate.class), anyList());
     }
 
     @Test
     void testGetCertificatesSuccessAllArgumentsAreNull() {
-        when(certificateDAO.getAll()).thenReturn(Optional.of(singletonList(new Certificate())));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(any(Certificate.class), anyList())).thenReturn(TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
+        when(tagsService.getAllNamesByCertificateId(anyInt()))
+                .thenReturn(TAG_NAMES_LIST)
+                .thenReturn(SECOND_TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(any(Certificate.class), anyList()))
+                .thenReturn(CERTIFICATE_DTO_RESP)
+                .thenReturn(SECOND_CERTIFICATE_DTO_RESP);
 
         List<CertificateDTOResp> actualResult = certificatesService
                 .getCertificates(null, null, null, null);
-        List<CertificateDTOResp> expectedResult = Collections.singletonList(TEST_CERTIFICATE_DTO_RESP);
 
-        assertEquals(expectedResult, actualResult);
+        assertEquals(CERTIFICATES_DTO_RESP, actualResult);
         verify(certificateDAO, times(1)).getAll();
-        verify(tagsService, times(1)).getAllNamesByCertificateId(anyInt());
-        verify(certificateMapper, times(1)).toDTO(any(Certificate.class), anyList());
+        verify(tagsService, times(1)).getAllNamesByCertificateId(CERTIFICATE_ID);
+        verify(tagsService, times(1)).getAllNamesByCertificateId(SECOND_CERTIFICATE_ID);
+        verify(certificateMapper, times(1)).toDTO(CERTIFICATE, TAG_NAMES_LIST);
+        verify(certificateMapper, times(1)).toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST);
         verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
@@ -157,201 +181,211 @@ class CertificatesServiceImplTest {
 
     @Test
     void testGetCertificatesByTagNameSuccess() {
-        when(certificateDAO.getCertificatesByTagName(anyString()))
-                .thenReturn(Optional.of(singletonList(new Certificate())));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(any(Certificate.class), anyList())).thenReturn(TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getCertificatesByTagName(TAG_NAME)).thenReturn(Optional.of(CERTIFICATES));
+        when(tagsService.getAllNamesByCertificateId(anyInt()))
+                .thenReturn(TAG_NAMES_LIST)
+                .thenReturn(SECOND_TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(any(Certificate.class), anyList()))
+                .thenReturn(CERTIFICATE_DTO_RESP)
+                .thenReturn(SECOND_CERTIFICATE_DTO_RESP);
 
         List<CertificateDTOResp> actualResult = certificatesService
-                .getCertificates(TEST_TAG_NAME, null, null, null);
-        List<CertificateDTOResp> expectedResult = Collections.singletonList(TEST_CERTIFICATE_DTO_RESP);
+                .getCertificates(TAG_NAME, null, null, null);
 
-        assertEquals(expectedResult, actualResult);
-        verify(certificateDAO,times(1)).getCertificatesByTagName(anyString());
-        verify(tagsService, times(1)).getAllNamesByCertificateId(anyInt());
-        verify(certificateMapper, times(1)).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getAll();
+        assertEquals(CERTIFICATES_DTO_RESP, actualResult);
+        verify(certificateDAO, times(1)).getCertificatesByTagName(TAG_NAME);
+        verify(tagsService, times(1)).getAllNamesByCertificateId(CERTIFICATE_ID);
+        verify(tagsService, times(1)).getAllNamesByCertificateId(SECOND_CERTIFICATE_ID);
+        verify(certificateMapper, times(1)).toDTO(CERTIFICATE, TAG_NAMES_LIST);
+        verify(certificateMapper, times(1)).toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST);
+        verify(certificateDAO, never()).getAll();
     }
 
     @Test
     void testGetCertificatesByTagNameThrowsEntityNotFoundException() {
-        when(certificateDAO.getCertificatesByTagName(anyString()))
-                .thenReturn(Optional.empty());
+        when(certificateDAO.getCertificatesByTagName(anyString())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> certificatesService
-                .getCertificates(TEST_TAG_NAME, null, null, null));
-        verify(certificateDAO,times(1)).getCertificatesByTagName(anyString());
+                .getCertificates(TAG_NAME, null, null, null));
+        verify(certificateDAO, times(1)).getCertificatesByTagName(TAG_NAME);
         verify(tagsService, never()).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, never()).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getAll();
+        verify(certificateDAO, never()).getAll();
     }
 
     @Test
     void testGetCertificatesByPartOfNameOrDescriptionSuccess() {
-        when(certificateDAO.getAll())
-                .thenReturn(Optional.of(singletonList(TEST_CERTIFICATE)));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(any(Certificate.class), anyList())).thenReturn(TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
+        when(tagsService.getAllNamesByCertificateId(anyInt()))
+                .thenReturn(TAG_NAMES_LIST)
+                .thenReturn(SECOND_TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(any(Certificate.class), anyList()))
+                .thenReturn(CERTIFICATE_DTO_RESP)
+                .thenReturn(SECOND_CERTIFICATE_DTO_RESP);
 
         List<CertificateDTOResp> actualResult = certificatesService
-                .getCertificates(null, StringUtils.truncate(TEST_CERTIFICATE_DESCRIPTION, 2),
-                        null, null);
-        List<CertificateDTOResp> expectedResult = Collections.singletonList(TEST_CERTIFICATE_DTO_RESP);
+                .getCertificates(
+                        null,
+                        PART_OF_DESCRIPTION,
+                        null,
+                        null
+                );
 
-        assertEquals(expectedResult, actualResult);
-        verify(certificateDAO,times(1)).getAll();
+        assertEquals(List.of(CERTIFICATE_DTO_RESP), actualResult);
+        verify(certificateDAO, times(1)).getAll();
         verify(tagsService, times(1)).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, times(1)).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testGetCertificatesByPartOfNameOrDescriptionThrowsEntityNotFoundException() {
-        when(certificateDAO.getAll())
-                .thenReturn(Optional.empty());
+        when(certificateDAO.getAll()).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> certificatesService
-                .getCertificates(null, TEST_CERTIFICATE_DESCRIPTION + "test", null, null));
-        verify(certificateDAO,times(1)).getAll();
+                .getCertificates(
+                        null,
+                        PART_OF_DESCRIPTION + " fake",
+                        null,
+                        null
+                )
+        );
+        verify(certificateDAO, times(1)).getAll();
         verify(tagsService, never()).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, never()).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testGetCertificatesWithSortingSeparatelyByNameAndDateSuccess() {
-        List<CertificateDTOResp> expectedResult = List.of(TEST_CERTIFICATE_DTO_RESP, SECOND_TEST_CERTIFICATE_DTO_RESP);
-        List<Certificate> certificates = new ArrayList<>(List.of(SECOND_TEST_CERTIFICATE, TEST_CERTIFICATE));
+        List<CertificateDTOResp> reversedCertDTOResp = List.of(SECOND_CERTIFICATE_DTO_RESP, CERTIFICATE_DTO_RESP);
+        List<CertificateDTOResp> actualResult;
 
-        when(certificateDAO.getAll())
-                .thenReturn(Optional.of(certificates));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(TEST_CERTIFICATE, TEST_TAG_NAMES_LIST)).thenReturn(TEST_CERTIFICATE_DTO_RESP);
-        when(certificateMapper.toDTO(SECOND_TEST_CERTIFICATE, TEST_TAG_NAMES_LIST)).thenReturn(SECOND_TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
+        when(tagsService.getAllNamesByCertificateId(CERTIFICATE_ID)).thenReturn(TAG_NAMES_LIST);
+        when(tagsService.getAllNamesByCertificateId(SECOND_CERTIFICATE_ID)).thenReturn(SECOND_TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(CERTIFICATE, TAG_NAMES_LIST)).thenReturn(CERTIFICATE_DTO_RESP);
+        when(certificateMapper.toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST)).thenReturn(SECOND_CERTIFICATE_DTO_RESP);
 
-        // Sorting By ID enabled by default
-        assertEquals(expectedResult, certificatesService
-                .getCertificates(null, null, null, null));
+        // Sorting by ID (enabled by default)
+        actualResult = certificatesService.getCertificates(null, null, null, null);
+        assertEquals(CERTIFICATES_DTO_RESP, actualResult);
 
-        assertEquals(expectedResult, certificatesService
-                .getCertificates(null, null, "name", null));
+        // Sorting by name
+        actualResult = certificatesService.getCertificates(null, null, "name", null);
+        assertEquals(reversedCertDTOResp, actualResult);
 
-        assertEquals(expectedResult, certificatesService
-                .getCertificates(null, null, "date", null));
+        // Sorting by date
+        actualResult = certificatesService.getCertificates(null, null, "date", null);
+        assertEquals(reversedCertDTOResp, actualResult);
 
-        verify(certificateDAO,times(3)).getAll();
-        verify(tagsService, times(6)).getAllNamesByCertificateId(anyInt());
-        verify(certificateMapper, times(6)).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        verify(certificateDAO, times(3)).getAll();
+        verify(tagsService, times(3)).getAllNamesByCertificateId(CERTIFICATE_ID);
+        verify(tagsService, times(3)).getAllNamesByCertificateId(SECOND_CERTIFICATE_ID);
+        verify(certificateMapper, times(3)).toDTO(CERTIFICATE, TAG_NAMES_LIST);
+        verify(certificateMapper, times(3)).toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST);
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testGetCertificatesWithSortingByThrowsUnsupportedSortingParameterException() {
-        List<Certificate> certificates = new ArrayList<>(List.of(SECOND_TEST_CERTIFICATE, TEST_CERTIFICATE));
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
 
-        when(certificateDAO.getAll()).thenReturn(Optional.of(certificates));
-
-        assertThrows(UnsupportedSortingParameter.class, ()-> certificatesService
+        assertThrows(UnsupportedSortingParameter.class, () -> certificatesService
                 .getCertificates(null, null, "invalidParameter", null));
 
-        verify(certificateDAO,times(1)).getAll();
+        verify(certificateDAO, times(1)).getAll();
         verify(tagsService, never()).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, never()).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testGetCertificatesWithOrderingSeparatelyByASCAndDESCSuccess() {
-        List<CertificateDTOResp> expectedResult = List.of(TEST_CERTIFICATE_DTO_RESP, SECOND_TEST_CERTIFICATE_DTO_RESP);
-        List<Certificate> certificates = new ArrayList<>(List.of(TEST_CERTIFICATE, SECOND_TEST_CERTIFICATE));
+        List<CertificateDTOResp> reversedCertDTOResp = List.of(SECOND_CERTIFICATE_DTO_RESP, CERTIFICATE_DTO_RESP);
+        List<CertificateDTOResp> actualResult;
 
-        when(certificateDAO.getAll())
-                .thenReturn(Optional.of(certificates));
-        when(tagsService.getAllNamesByCertificateId(anyInt())).thenReturn(TEST_TAG_NAMES_LIST);
-        when(certificateMapper.toDTO(TEST_CERTIFICATE, TEST_TAG_NAMES_LIST)).thenReturn(TEST_CERTIFICATE_DTO_RESP);
-        when(certificateMapper.toDTO(SECOND_TEST_CERTIFICATE, TEST_TAG_NAMES_LIST)).thenReturn(SECOND_TEST_CERTIFICATE_DTO_RESP);
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
+        when(tagsService.getAllNamesByCertificateId(CERTIFICATE_ID)).thenReturn(TAG_NAMES_LIST);
+        when(tagsService.getAllNamesByCertificateId(SECOND_CERTIFICATE_ID)).thenReturn(SECOND_TAG_NAMES_LIST);
+        when(certificateMapper.toDTO(CERTIFICATE, TAG_NAMES_LIST)).thenReturn(CERTIFICATE_DTO_RESP);
+        when(certificateMapper.toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST)).thenReturn(SECOND_CERTIFICATE_DTO_RESP);
 
-        assertEquals(expectedResult, certificatesService
-                .getCertificates(null, null, null, "asc"));
-        assertNotEquals(expectedResult, certificatesService
-                .getCertificates(null, null, null, "desc"));
+        // Sorting by ID ASC order
+        actualResult = certificatesService.getCertificates(null, null, null, "asc");
+        assertEquals(CERTIFICATES_DTO_RESP, actualResult);
 
-        verify(certificateDAO,times(2)).getAll();
-        verify(tagsService, times(4)).getAllNamesByCertificateId(anyInt());
-        verify(certificateMapper, times(4)).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        // Sorting by ID DESC order
+        actualResult = certificatesService.getCertificates(null, null, null, "desc");
+        assertEquals(reversedCertDTOResp, actualResult);
+
+        verify(certificateDAO, times(2)).getAll();
+        verify(tagsService, times(2)).getAllNamesByCertificateId(CERTIFICATE_ID);
+        verify(tagsService, times(2)).getAllNamesByCertificateId(SECOND_CERTIFICATE_ID);
+        verify(certificateMapper, times(2)).toDTO(CERTIFICATE, TAG_NAMES_LIST);
+        verify(certificateMapper, times(2)).toDTO(SECOND_CERTIFICATE, SECOND_TAG_NAMES_LIST);
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testGetCertificatesWithOrderingSeparatelyByASCAndDESCThrowsUnsupportedSortingParameterException() {
-        List<Certificate> certificates = new ArrayList<>(List.of(SECOND_TEST_CERTIFICATE, TEST_CERTIFICATE));
+        when(certificateDAO.getAll()).thenReturn(Optional.of(CERTIFICATES));
 
-        when(certificateDAO.getAll()).thenReturn(Optional.of(certificates));
-
-        assertThrows(UnsupportedSortingParameter.class, ()-> certificatesService
+        assertThrows(UnsupportedSortingParameter.class, () -> certificatesService
                 .getCertificates(null, null, null, "invalidOrder"));
 
-        verify(certificateDAO,times(1)).getAll();
+        verify(certificateDAO, times(1)).getAll();
         verify(tagsService, never()).getAllNamesByCertificateId(anyInt());
         verify(certificateMapper, never()).toDTO(any(Certificate.class), anyList());
-        verify(certificateDAO,never()).getCertificatesByTagName(anyString());
+        verify(certificateDAO, never()).getCertificatesByTagName(anyString());
     }
 
     @Test
     void testUpdateSuccess() {
-        int updateCertificateId = 1;
-
-        List<String> newTags = new ArrayList<>();
-        newTags.add("Tag1");
-        newTags.add("Tag4");
-        newTags.add("Tag5");
+        int updateCertificateId = CERTIFICATE_ID;
+        List<String> newTags = SECOND_TAG_NAMES_LIST;
+        List<String> oldTags = TAG_NAMES_LIST;
 
         CertificateDTOReq certDTOReq = new CertificateDTOReq(
-                "Updated Name",
+                SECOND_CERTIFICATE_NAME,
                 newTags,
-                "Updated Description",
-                BigDecimal.valueOf(150.00),
-                15
+                SECOND_CERTIFICATE_DESCRIPTION,
+                SECOND_CERTIFICATE_PRICE,
+                SECOND_CERTIFICATE_DURATION
         );
 
         Certificate oldCertificate = new Certificate();
-        oldCertificate.setId(updateCertificateId);
-        oldCertificate.setName("Old Name");
-        oldCertificate.setDescription("Old Description");
-        oldCertificate.setPrice(BigDecimal.valueOf(100.00));
-        oldCertificate.setDuration(10);
-
-        Certificate newCertificate = new Certificate();
-        newCertificate.setId(updateCertificateId);
-        newCertificate.setName("Updated Name");
-        newCertificate.setDescription("Updated Description");
-        newCertificate.setPrice(BigDecimal.valueOf(150.00));
-        newCertificate.setDuration(15);
-
-        List<String> oldTags = new ArrayList<>();
-        oldTags.add("Tag1");
-        oldTags.add("Tag2");
-        oldTags.add("Tag3");
+        oldCertificate.setId(CERTIFICATE_ID);
+        oldCertificate.setName(CERTIFICATE_NAME);
+        oldCertificate.setDescription(CERTIFICATE_DESCRIPTION);
+        oldCertificate.setPrice(CERTIFICATE_PRICE);
+        oldCertificate.setDuration(CERTIFICATE_DURATION);
 
         CertificateDTOResp oldCertDTOResp = new CertificateDTOResp(
-                updateCertificateId,
-                "Old Name",
+                CERTIFICATE_ID,
+                CERTIFICATE_NAME,
                 oldTags,
-                "Old Description",
-                BigDecimal.valueOf(100.00),
-                10
+                CERTIFICATE_DESCRIPTION,
+                CERTIFICATE_PRICE,
+                CERTIFICATE_DURATION
         );
+
+        Certificate newCertificate = new Certificate();
+        newCertificate.setId(CERTIFICATE_ID);
+        newCertificate.setName(SECOND_CERTIFICATE_NAME);
+        newCertificate.setDescription(SECOND_CERTIFICATE_DESCRIPTION);
+        newCertificate.setPrice(SECOND_CERTIFICATE_PRICE);
+        newCertificate.setDuration(SECOND_CERTIFICATE_DURATION);
 
         CertificateDTOResp expectedCertDTOResp = new CertificateDTOResp(
-                updateCertificateId,
-                "Updated Name",
+                CERTIFICATE_ID,
+                SECOND_CERTIFICATE_NAME,
                 newTags,
-                "Updated Description",
-                BigDecimal.valueOf(150.00),
-                15
+                SECOND_CERTIFICATE_DESCRIPTION,
+                SECOND_CERTIFICATE_PRICE,
+                SECOND_CERTIFICATE_DURATION
         );
 
-        // mock
         when(certificateDAO.getById(updateCertificateId))
                 .thenReturn(Optional.of(oldCertificate))
                 .thenReturn(Optional.of(newCertificate));
@@ -361,26 +395,20 @@ class CertificatesServiceImplTest {
         when(certificateMapper.toDTO(any(Certificate.class), anyList()))
                 .thenReturn(oldCertDTOResp)
                 .thenReturn(expectedCertDTOResp);
-
         when(tagsService.getTagIdByName("Tag2")).thenReturn(2);
         when(tagsService.getTagIdByName("Tag3")).thenReturn(3);
         when(tagsService.getTagIdByName("Tag4")).thenReturn(4);
         when(tagsService.getTagIdByName("Tag5")).thenReturn(5);
-
         when(certificateMapper.toUpdatedEntity(certDTOReq, oldCertDTOResp)).thenReturn(newCertificate);
 
-        when(certificateDAO.update(updateCertificateId, newCertificate)).thenReturn(4);
-
-        // act
         CertificateDTOResp actualCertDTOResp = certificatesService.update(updateCertificateId, certDTOReq);
 
-        // assert and verify
+        assertEquals(expectedCertDTOResp, actualCertDTOResp);
         verify(certificateDAO).update(updateCertificateId, newCertificate);
         verify(certificatesTagsService).deleteTagFromCertificate(2, updateCertificateId);
         verify(certificatesTagsService).deleteTagFromCertificate(3, updateCertificateId);
         verify(certificatesTagsService).attachTagToCertificate(4, updateCertificateId);
         verify(certificatesTagsService).attachTagToCertificate(5, updateCertificateId);
-        assertEquals(expectedCertDTOResp, actualCertDTOResp);
     }
 
     @Test
@@ -407,16 +435,16 @@ class CertificatesServiceImplTest {
     void testDeleteByIdSuccess() {
         when(certificateDAO.deleteById(anyInt())).thenReturn(1);
 
-        certificatesService.deleteById(TEST_CERTIFICATE_ID);
+        certificatesService.deleteById(CERTIFICATE_ID);
 
-        verify(certificateDAO).deleteById(anyInt());
+        verify(certificateDAO).deleteById(CERTIFICATE_ID);
     }
 
     @Test
     void testDeleteByIdThrowsEntityNotDeletedException() {
         when(certificateDAO.deleteById(anyInt())).thenReturn(0);
 
-        assertThrows(EntityNotDeletedException.class, () -> certificatesService.deleteById(TEST_CERTIFICATE_ID));
-        verify(certificateDAO).deleteById(anyInt());
+        assertThrows(EntityNotDeletedException.class, () -> certificatesService.deleteById(CERTIFICATE_ID));
+        verify(certificateDAO).deleteById(CERTIFICATE_ID);
     }
 }
