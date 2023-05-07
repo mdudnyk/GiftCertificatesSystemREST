@@ -150,10 +150,6 @@ public class CertificatesServiceImpl implements CertificatesService {
         attachNewTagsPassedInUpdateRequestToCertificateDBEntity(certId, oldTagNamesList, newTagNamesList);
     }
 
-    private List<String> getTagNamesFromSourceWhichNotPresentedInProvider(List<String> sourceList, List<String> providerList) {
-        return sourceList.stream().filter(tagName -> !providerList.contains(tagName)).toList();
-    }
-
     private void removeIrrelevantTagsFromCertificateDBEntity(int certId, List<String> oldTagNamesList, List<String> newTagNamesList) {
         List<String> tagNamesToRemove =
                 getTagNamesFromSourceWhichNotPresentedInProvider(oldTagNamesList, newTagNamesList);
@@ -168,6 +164,10 @@ public class CertificatesServiceImpl implements CertificatesService {
                 getTagNamesFromSourceWhichNotPresentedInProvider(newTagNamesList, oldTagNamesList);
         tagNamesToAttach
                 .forEach(tagName -> attachTagToCertificate(tagName, certId));
+    }
+
+    private List<String> getTagNamesFromSourceWhichNotPresentedInProvider(List<String> sourceList, List<String> providerList) {
+        return sourceList.stream().filter(tagName -> !providerList.contains(tagName)).toList();
     }
 
     @Override

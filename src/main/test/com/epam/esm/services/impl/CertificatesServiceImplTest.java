@@ -2,6 +2,7 @@ package com.epam.esm.services.impl;
 
 import com.epam.esm.dao.CertificateDAO;
 import com.epam.esm.models.Certificate;
+import com.epam.esm.models.dtos.certificate.CertificateDTOReq;
 import com.epam.esm.models.dtos.certificate.CertificateDTOResp;
 import com.epam.esm.services.CertificatesTagsService;
 import com.epam.esm.services.TagsService;
@@ -48,7 +49,6 @@ class CertificatesServiceImplTest {
     private static final Certificate SECOND_TEST_CERTIFICATE;
     private static final CertificateDTOResp TEST_CERTIFICATE_DTO_RESP;
     private static final CertificateDTOResp SECOND_TEST_CERTIFICATE_DTO_RESP;
-
 
     static {
         TEST_CERTIFICATE = new Certificate(
@@ -297,6 +297,111 @@ class CertificatesServiceImplTest {
         verify(certificateDAO,never()).getCertificatesByTagName(anyString());
     }
 
+    @Test
+    void testUpdateSuccess() {
+        int updateCertificateId = 1;
+
+        List<String> newTags = new ArrayList<>();
+        newTags.add("Tag1");
+        newTags.add("Tag4");
+        newTags.add("Tag5");
+
+        CertificateDTOReq certDTOReq = new CertificateDTOReq(
+                "Updated Name",
+                newTags,
+                "Updated Description",
+                BigDecimal.valueOf(150.00),
+                15
+        );
+
+        Certificate oldCertificate = new Certificate();
+        oldCertificate.setId(updateCertificateId);
+        oldCertificate.setName("Old Name");
+        oldCertificate.setDescription("Old Description");
+        oldCertificate.setPrice(BigDecimal.valueOf(100.00));
+        oldCertificate.setDuration(10);
+
+        Certificate newCertificate = new Certificate();
+        newCertificate.setId(updateCertificateId);
+        newCertificate.setName("Updated Name");
+        newCertificate.setDescription("Updated Description");
+        newCertificate.setPrice(BigDecimal.valueOf(150.00));
+        newCertificate.setDuration(15);
+
+        List<String> oldTags = new ArrayList<>();
+        oldTags.add("Tag1");
+        oldTags.add("Tag2");
+        oldTags.add("Tag3");
+
+        CertificateDTOResp oldCertDTOResp = new CertificateDTOResp(
+                updateCertificateId,
+                "Old Name",
+                oldTags,
+                "Old Description",
+                BigDecimal.valueOf(100.00),
+                10
+        );
+
+        CertificateDTOResp expectedCertDTOResp = new CertificateDTOResp(
+                updateCertificateId,
+                "Updated Name",
+                newTags,
+                "Updated Description",
+                BigDecimal.valueOf(150.00),
+                15
+        );
+
+        // mock
+        when(certificateDAO.getById(updateCertificateId))
+                .thenReturn(Optional.of(oldCertificate))
+                .thenReturn(Optional.of(newCertificate));
+        when(tagsService.getAllNamesByCertificateId(updateCertificateId))
+                .thenReturn(oldTags)
+                .thenReturn(newTags);
+        when(certificateMapper.toDTO(any(Certificate.class), anyList()))
+                .thenReturn(oldCertDTOResp)
+                .thenReturn(expectedCertDTOResp);
+
+        when(tagsService.getTagIdByName("Tag2")).thenReturn(2);
+        when(tagsService.getTagIdByName("Tag3")).thenReturn(3);
+        when(tagsService.getTagIdByName("Tag4")).thenReturn(4);
+        when(tagsService.getTagIdByName("Tag5")).thenReturn(5);
+
+        when(certificateMapper.toUpdatedEntity(certDTOReq, oldCertDTOResp)).thenReturn(newCertificate);
+
+        when(certificateDAO.update(updateCertificateId, newCertificate)).thenReturn(4);
+
+        // act
+        CertificateDTOResp actualCertDTOResp = certificatesService.update(updateCertificateId, certDTOReq);
+
+        // assert and verify
+        verify(certificateDAO).update(updateCertificateId, newCertificate);
+        verify(certificatesTagsService).deleteTagFromCertificate(2, updateCertificateId);
+        verify(certificatesTagsService).deleteTagFromCertificate(3, updateCertificateId);
+        verify(certificatesTagsService).attachTagToCertificate(4, updateCertificateId);
+        verify(certificatesTagsService).attachTagToCertificate(5, updateCertificateId);
+        assertEquals(expectedCertDTOResp, actualCertDTOResp);
+    }
+
+    @Test
+    void testUpdateEntityNotFoundException() {
+        int updateCertificateId = 1;
+
+        CertificateDTOReq certDTOReq = new CertificateDTOReq(
+                "Updated Name",
+                null,
+                "Updated Description",
+                BigDecimal.valueOf(150.00),
+                15
+        );
+
+        when(certificateDAO.getById(updateCertificateId)).thenReturn(Optional.empty());
+
+        verify(certificateDAO, never()).update(anyInt(), any(Certificate.class));
+        verify(certificatesTagsService, never()).deleteTagFromCertificate(anyInt(), anyInt());
+        verify(certificatesTagsService, never()).attachTagToCertificate(anyInt(), anyInt());
+        assertThrows(EntityNotFoundException.class, () -> certificatesService.update(updateCertificateId, certDTOReq));
+    }
 
     @Test
     void testDeleteByIdSuccess() {
